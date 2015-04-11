@@ -36,23 +36,35 @@ class SteadyStateGA {
       A chromosome will be a permutation of (0, 1, ..., N-1).
      *****************************************************************/
     public:
-        SteadyStateGA(const TestCase& testCase);
+        typedef void (SteadyStateGA::*EvaluateFn)(Solution& s);
+        typedef void (SteadyStateGA::*GenerateRandomSolutionFn)(Solution& s);
+        typedef void (SteadyStateGA::*SelectionFn)(Solution& s);
+        typedef void (SteadyStateGA::*CrossoverFn)(const Solution& p1, const Solution& p2, Solution& c);
+        typedef void (SteadyStateGA::*MutationFn)(Solution& s);
+        typedef void (SteadyStateGA::*ReplacementFn)(const Solution& s);
+        SteadyStateGA(const TestCase& testCase
+                , EvaluateFn Evaluate_
+                , GenerateRandomSolutionFn GenerateRandomSolution_
+                , SelectionFn Selection_
+                , CrossoverFn Crossover_
+                , MutationFn Mutation_
+                , ReplacementFn Replacement_);
         void GA();
         void Answer();
         void PrintAllSolutions();
-    private:
-        void (SteadyStateGA::*Evaluate)(Solution& s);
         void Evaluate1(Solution& s);
-        void (SteadyStateGA::*GenerateRandomSolution)(Solution& s);
         void GenerateRandomSolution1(Solution& s);
-        void (SteadyStateGA::*Selection)(Solution& s);
         void Selection1(Solution& s);
-        void (SteadyStateGA::*Crossover)(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover1(const Solution& p1, const Solution& p2, Solution& c);
-        void (SteadyStateGA::*Mutation)(Solution& s);
         void Mutation1(Solution& s);
-        void (SteadyStateGA::*Replacement)(const Solution& offspr);
         void Replacement1(const Solution& offspr);
+    private:
+        EvaluateFn Evaluate;
+        GenerateRandomSolutionFn GenerateRandomSolution;
+        SelectionFn Selection;
+        CrossoverFn Crossover;
+        MutationFn Mutation;
+        ReplacementFn Replacement;
         void PrintSolution(const Solution& s);
 
         int solutionLen;
@@ -63,18 +75,24 @@ class SteadyStateGA {
         Solution record;
 };
 
-SteadyStateGA::SteadyStateGA(const TestCase& testCase) : solutionLen(testCase.NumLocations),
+SteadyStateGA::SteadyStateGA(const TestCase& testCase
+        , EvaluateFn Evaluate_
+        , GenerateRandomSolutionFn GenerateRandomSolution_
+        , SelectionFn Selection_
+        , CrossoverFn Crossover_
+        , MutationFn Mutation_
+        , ReplacementFn Replacement_) : solutionLen(testCase.NumLocations),
     solutionDist(testCase.Dist),
     timeLimit(testCase.TimeLimit),
     population(PSIZE, Solution(solutionLen)),
-    record(solutionLen)
+    record(solutionLen),
+    Evaluate(Evaluate_),
+    GenerateRandomSolution(GenerateRandomSolution_),
+    Selection(Selection_),
+    Crossover(Crossover_),
+    Mutation(Mutation_),
+    Replacement(Replacement_)
 {
-    Evaluate = &SteadyStateGA::Evaluate1;
-    GenerateRandomSolution = &SteadyStateGA::GenerateRandomSolution1;
-    Selection = &SteadyStateGA::Selection1;
-    Crossover = &SteadyStateGA::Crossover1;
-    Mutation = &SteadyStateGA::Mutation1;
-    Replacement = &SteadyStateGA::Replacement1;
 }
 
 // calculate the fitness of s and store it into s->f
@@ -183,7 +201,13 @@ int main() {
     std::srand(std::time(0));
     TestCase testCase;
     testCase.PrintTestCase();
-    SteadyStateGA ga(testCase);
+    SteadyStateGA ga(testCase
+            , &SteadyStateGA::Evaluate1
+            , &SteadyStateGA::GenerateRandomSolution1
+            , &SteadyStateGA::Selection1
+            , &SteadyStateGA::Crossover1
+            , &SteadyStateGA::Mutation1
+            , &SteadyStateGA::Replacement1);
     ga.GA();
     ga.Answer();
     return 0;
