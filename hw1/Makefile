@@ -1,13 +1,24 @@
 all: ga
 
-ga: ga.cpp
-	g++ -o ga -O3 ga.cpp
+ga: ga.o test_case.o
+	g++ -o ga -O3 ga.o test_case.o
+
+ga.o: ga.cpp
+	g++ -c -O3 ga.cpp
+
+test_case.o: test_case.h test_case.cpp
+	g++ -c -O3 test_case.cpp
 
 run: ga
 	./ga < cycle.in > cycle.out
 
+a: ga
+	./ga < cycle.in
+
 clean:
-	rm ga
+	rm -f ga
+	rm -f *.o
+	rm -f *.out.*
 
 test: ga
 	./ga < cycle.in > cycle.out

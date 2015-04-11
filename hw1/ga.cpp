@@ -1,186 +1,190 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<math.h>
-#include<time.h>
+#include <cstdlib>
+#include <cmath>
+#include <ctime>
+#include <iostream>
+#include <vector>
+#include "test_case.h"
 
-#define MAXN	318 // Maximum value of N
-#define PSIZE	100 // Size of the population
+// https://isocpp.org/wiki/faq/pointers-to-members
+#define CALL_MEMBER_FN(object,ptrToMember)  ((object).*(ptrToMember))
 
-/*****************************************************************
-	Input variables
-*****************************************************************/
-// (X[i], Y[i]) := the i-th location
-double X[MAXN], Y[MAXN];
-// The number of locations
-int N;
+const static int PSIZE = 100; // Size of the population
 
-// Time limit for the test case
-long long TimeLimit;
+struct Solution
+{
+    Solution(int len);
+    Solution(const Solution& s);
+    std::vector< int > Chromosome;
+    double Fitness;
+};
 
+Solution::Solution(int len) : Chromosome(std::vector< int >(len)),
+    Fitness(0)
+{
+}
 
-// Dist[i][j] := the distance between (X[i], Y[i]) and (X[j], Y[j])
-// will be automatically calculated
-double Dist[MAXN][MAXN];
+Solution::Solution(const Solution& s)
+{
+    this->Chromosome = s.Chromosome;
+    this->Fitness = s.Fitness;
+}
 
+class SteadyStateGA {
+    /*****************************************************************
+      GA variables and functions
+      Note that the representation is currently order-based.
+      A chromosome will be a permutation of (0, 1, ..., N-1).
+     *****************************************************************/
+    public:
+        SteadyStateGA(const TestCase& testCase);
+        void GA();
+        void Answer();
+        void PrintAllSolutions();
+    private:
+        void (SteadyStateGA::*Evaluate)(Solution& s);
+        void Evaluate1(Solution& s);
+        void (SteadyStateGA::*GenerateRandomSolution)(Solution& s);
+        void GenerateRandomSolution1(Solution& s);
+        void (SteadyStateGA::*Selection)(Solution& s);
+        void Selection1(Solution& s);
+        void (SteadyStateGA::*Crossover)(const Solution& p1, const Solution& p2, Solution& c);
+        void Crossover1(const Solution& p1, const Solution& p2, Solution& c);
+        void (SteadyStateGA::*Mutation)(Solution& s);
+        void Mutation1(Solution& s);
+        void (SteadyStateGA::*Replacement)(const Solution& offspr);
+        void Replacement1(const Solution& offspr);
+        void PrintSolution(const Solution& s);
 
+        int solutionLen;
+        const std::vector< std::vector< double > >& solutionDist;
+        long long timeLimit;
+        // population of solutions
+        std::vector< Solution > population;
+        Solution record;
+};
 
-/*****************************************************************
-	GA variables and functions
-	Note that the representation is currently order-based.
-	A chromosome will be a permutation of (0, 1, ..., N-1).
-*****************************************************************/
-typedef struct {
-	int ch[MAXN];	// chromosome
-	double f;		// fitness
-} SOL;
-
-// population of solutions
-SOL population[PSIZE];
-
-// best (found) solution
-// eval() updates this
-SOL record;
-
+SteadyStateGA::SteadyStateGA(const TestCase& testCase) : solutionLen(testCase.NumLocations),
+    solutionDist(testCase.Dist),
+    timeLimit(testCase.TimeLimit),
+    population(PSIZE, Solution(solutionLen)),
+    record(solutionLen)
+{
+    Evaluate = &SteadyStateGA::Evaluate1;
+    GenerateRandomSolution = &SteadyStateGA::GenerateRandomSolution1;
+    Selection = &SteadyStateGA::Selection1;
+    Crossover = &SteadyStateGA::Crossover1;
+    Mutation = &SteadyStateGA::Mutation1;
+    Replacement = &SteadyStateGA::Replacement1;
+}
 
 // calculate the fitness of s and store it into s->f
-double eval(SOL *s) {
-	int i;
-
-	s->f = 0;
-	for (i = 0; i < N; i++) {
-		s->f += Dist[s->ch[i]][s->ch[(i+1)%N]];
-	}
-
-	if (record.f > s->f) {
-		record.f = s->f;
-		for (i = 0; i < N; i++) {
-			record.ch[i] = s->ch[i];
-		}
-	}
-
-	return s->f;
+void SteadyStateGA::Evaluate1(Solution& s) {
+    s.Fitness = 0;
+    for (int i = 0; i < solutionLen; ++i) {
+        s.Fitness += solutionDist[s.Chromosome[i]][s.Chromosome[(i + 1) % solutionLen]];
+    }
+    if (s.Fitness > record.Fitness) {
+        record = s;
+    }
 }
-
 
 // generate a random order-based solution at s
-void gen_rand_sol(SOL *s) {
-	int i;
-	for (i = 0; i < N; i++) {
-		s->ch[i] = i;
-	}
-	for (i = 0; i < N; i++) {
-		int r = i + rand() % (N - i);	// r is a random number in [i..N-i)
-		int tmp = s->ch[i]; s->ch[i] = s->ch[r]; s->ch[r] = tmp; // swap
-	}
-	
-	// calculate the fitness
-	eval(s);
+void SteadyStateGA::GenerateRandomSolution1(Solution& s) {
+    for (int i = 0; i < solutionLen; ++i) {
+        s.Chromosome[i] = i;
+    }
+    for (int i = 0; i < solutionLen; ++i) {
+        int r = i + std::rand() % (solutionLen - i);	// r is a random number in [i..N-i)
+        std::swap(s.Chromosome[i], s.Chromosome[r]); // swap
+    }
+    // calculate the fitness
+    CALL_MEMBER_FN(*this, Evaluate)(s);
 }
-
 
 // choose one solution from the population
-// currently this operator randomly chooses one w/ uniform distribution
-void selection(SOL **p)
-{
-	*p = &population[rand() % PSIZE];
+// currently this operator randomly chooses one w/ uniform Distribution
+void SteadyStateGA::Selection1(Solution& p) {
+    int r = std::rand() % PSIZE;
+    p = population[r];
 }
-
 
 // combine the given parents p1 and p2
 // and store the generated solution at c
 // currently the child will be same as p1
-void crossover(const SOL *p1, const SOL *p2, SOL *c) {
-	int i;
-	for (i = 0; i < N; i++) {
-		c->ch[i] = p1->ch[i];
-	}
-	eval(c);
+void SteadyStateGA::Crossover1(const Solution& p1, const Solution& p2, Solution& c) {
+    /*
+       for (int i = 0; i < len; ++i) {
+       c.Chromosome[i] = p1.Chromosome[i];
+       }
+       */
+    CALL_MEMBER_FN(*this, Evaluate)(c);
 }
-
 
 // mutate the solution s
 // currently this operator does nothing
-void mutation(SOL *s) {
-	/*
-		EMPTY
-	*/
-	eval(s);
+void SteadyStateGA::Mutation1(Solution& s) {
+    /*
+       EMPTY
+       */
+    CALL_MEMBER_FN(*this, Evaluate)(s);
 }
-
 
 // replace one solution from the population with the new offspring
 // currently any random solution can be replaced
-void replacement(const SOL *offspr) {
-	int i, p = rand() % PSIZE;
-	population[p].f = offspr->f;
-	for (i = 0; i < N; i++) {
-		population[p].ch[i] = offspr->ch[i];
-	}
+void SteadyStateGA::Replacement1(const Solution& offspr) {
+    int p = std::rand() % PSIZE;
+    population[p] = offspr;
 }
-
 
 // a "steady-state" GA
-void GA() {
-	int i;
-	SOL c;
-	time_t begin = time(NULL);
-
-	for (i = 0; i < PSIZE; i++) {
-		gen_rand_sol(&population[i]);
-	}
-
-	while (1) {
-		if(time(NULL) - begin >= TimeLimit - 1) return; // end condition
-		SOL *p1, *p2;
-		selection(&p1); selection(&p2);
-		crossover(p1, p2, &c);
-		mutation(&c);
-		replacement(&c);
-	}
+void SteadyStateGA::GA() {
+    std::time_t begin = std::time(0);
+    for (int i = 0; i < PSIZE; ++i) {
+        CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
+    }
+    while (true) {
+        if (std::time(0) - begin > timeLimit - 1) {
+            return; // end condition
+        }
+        Solution p1(solutionLen);
+        Solution p2(solutionLen);
+        Solution c(solutionLen);
+        CALL_MEMBER_FN(*this, Selection)(p1);
+        CALL_MEMBER_FN(*this, Selection)(p2);
+        CALL_MEMBER_FN(*this, Crossover)(p1, p2, c);
+        CALL_MEMBER_FN(*this, Mutation)(c);
+        CALL_MEMBER_FN(*this, Replacement)(c);
+    }
 }
-
-
-// read the test case from stdin
-// and initialize some values such as record.f and Dist
-void init() {
-	int i, j, tmp;
-	double time_limit;
-
-	tmp = scanf("%d", &N);
-	for (i = 0; i < N; i++) {
-		tmp = scanf("%lf %lf", &X[i], &Y[i]);
-	}
-	for (i = 0; i < N; i++) {
-		for (j = 0; j < N; j++) {
-			double dx = X[i] - X[j], dy = Y[i] - Y[j];
-			Dist[i][j] = sqrt(dx*dx + dy*dy);
-		}
-	}
-	tmp = scanf("%lf", &time_limit);
-	TimeLimit = (long long) time_limit;
-
-	record.f = 1e100;
-}
-
 
 // print the best solution found to stdout
-void answer() {
-	int i;
-
-	for (i = 0; i < N; i++) {
-		if (i > 0) printf(" ");
-		printf("%d", record.ch[i]+1);
-	}
-	printf("\n");
+void SteadyStateGA::Answer() {
+    PrintSolution(record);
 }
 
+void SteadyStateGA::PrintSolution(const Solution& s) {
+    for (int i = 0; i < solutionLen; ++i) {
+        if (i > 0) {
+            std::cout << " ";
+        }
+        std::cout << s.Chromosome[i] + 1;
+    }
+    std::cout << std::endl;
+}
+
+void SteadyStateGA::PrintAllSolutions() {
+    for (int i = 0; i < PSIZE; ++i) {
+        PrintSolution(population[i]);
+    }
+}
 
 int main() {
-	srand(time(NULL));
-
-	init();
-	GA();
-	answer();
-	return 0;
+    // http://en.cppreference.com/w/cpp/numeric/random/rand
+    std::srand(std::time(0));
+    TestCase testCase;
+    testCase.PrintTestCase();
+    SteadyStateGA ga(testCase);
+    ga.GA();
+    ga.Answer();
+    return 0;
 }
-
