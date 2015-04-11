@@ -2,3 +2,4 @@ ga
 *.o
 *.out
 *.out.*
+tags

@@ -3,6 +3,8 @@
 #include <ctime>
 #include <iostream>
 #include <vector>
+#include <limits>
+#include <algorithm>
 #include "test_case.h"
 
 // https://isocpp.org/wiki/faq/pointers-to-members
@@ -19,7 +21,7 @@ struct Solution
 };
 
 Solution::Solution(int len) : Chromosome(std::vector< int >(len)),
-    Fitness(0)
+    Fitness(std::numeric_limits< double >::max())
 {
 }
 
@@ -49,15 +51,15 @@ class SteadyStateGA {
                 , CrossoverFn Crossover_
                 , MutationFn Mutation_
                 , ReplacementFn Replacement_);
-        void GA();
-        void Answer();
-        void PrintAllSolutions();
         void Evaluate1(Solution& s);
         void GenerateRandomSolution1(Solution& s);
         void Selection1(Solution& s);
         void Crossover1(const Solution& p1, const Solution& p2, Solution& c);
         void Mutation1(Solution& s);
         void Replacement1(const Solution& offspr);
+        void GA();
+        void Answer();
+        void PrintAllSolutions();
     private:
         EvaluateFn Evaluate;
         GenerateRandomSolutionFn GenerateRandomSolution;
@@ -101,7 +103,7 @@ void SteadyStateGA::Evaluate1(Solution& s) {
     for (int i = 0; i < solutionLen; ++i) {
         s.Fitness += solutionDist[s.Chromosome[i]][s.Chromosome[(i + 1) % solutionLen]];
     }
-    if (s.Fitness > record.Fitness) {
+    if (s.Fitness < record.Fitness) {
         record = s;
     }
 }
@@ -130,20 +132,23 @@ void SteadyStateGA::Selection1(Solution& p) {
 // and store the generated solution at c
 // currently the child will be same as p1
 void SteadyStateGA::Crossover1(const Solution& p1, const Solution& p2, Solution& c) {
-    /*
-       for (int i = 0; i < len; ++i) {
-       c.Chromosome[i] = p1.Chromosome[i];
-       }
-       */
+    c = p1;
+    int p = std::rand() % solutionLen;
+    int secondIndex = p;
+    for (int i = p; i < solutionLen + p; ++i) {
+        if (std::find(p1.Chromosome.begin(), p1.Chromosome.begin() + p, p2.Chromosome[i % solutionLen]) == p1.Chromosome.begin() + p) {
+            c.Chromosome[secondIndex++] = p2.Chromosome[i % solutionLen];
+        }
+    }
     CALL_MEMBER_FN(*this, Evaluate)(c);
 }
 
 // mutate the solution s
 // currently this operator does nothing
 void SteadyStateGA::Mutation1(Solution& s) {
-    /*
-       EMPTY
-       */
+    int p = std::rand() % solutionLen;
+    int q = std::rand() % solutionLen;
+    std::swap(s.Chromosome[p], s.Chromosome[q]); // swap
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
@@ -180,6 +185,12 @@ void SteadyStateGA::Answer() {
     PrintSolution(record);
 }
 
+void SteadyStateGA::PrintAllSolutions() {
+    for (int i = 0; i < PSIZE; ++i) {
+        PrintSolution(population[i]);
+    }
+}
+
 void SteadyStateGA::PrintSolution(const Solution& s) {
     for (int i = 0; i < solutionLen; ++i) {
         if (i > 0) {
@@ -187,20 +198,15 @@ void SteadyStateGA::PrintSolution(const Solution& s) {
         }
         std::cout << s.Chromosome[i] + 1;
     }
+    std::cout << " : " << s.Fitness;
     std::cout << std::endl;
-}
-
-void SteadyStateGA::PrintAllSolutions() {
-    for (int i = 0; i < PSIZE; ++i) {
-        PrintSolution(population[i]);
-    }
 }
 
 int main() {
     // http://en.cppreference.com/w/cpp/numeric/random/rand
     std::srand(std::time(0));
     TestCase testCase;
-    testCase.PrintTestCase();
+    //testCase.PrintTestCase();
     SteadyStateGA ga(testCase
             , &SteadyStateGA::Evaluate1
             , &SteadyStateGA::GenerateRandomSolution1
@@ -210,5 +216,6 @@ int main() {
             , &SteadyStateGA::Replacement1);
     ga.GA();
     ga.Answer();
+    //ga.PrintAllSolutions();
     return 0;
 }
