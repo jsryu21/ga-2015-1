@@ -18,6 +18,7 @@ const static double TOURNAMENT_SELECTION_PRESSURE_T = 0.5;
 const static int GENERAL_TOURNAMENT_SELECTION_PRESSURE_K = 5;
 const static double RANK_SELECTION_PRESSURE_MAX = 3;
 const static double RANK_SELECTION_PRESSURE_MIN = 1;
+const static double HYBRID_REPLACEMENT_T = 0.8;
 
 struct Solution
 {
@@ -81,6 +82,9 @@ class SteadyStateGA {
         void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr);
+        void Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr);
+        void Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr);
+        void Replacement6(const Solution& p1, const Solution& p2, const Solution& offspr);
         void GA();
         void Answer();
         void PrintAllSolutions();
@@ -202,6 +206,7 @@ void SteadyStateGA::Selection2(Solution& p) {
             return;
         }
     }
+    // http://valgrind.org/gallery/linux_mag.html
     p = population[PSIZE - 1];
 }
 
@@ -292,6 +297,29 @@ void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const S
     }
 }
 
+void SteadyStateGA::Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr) {
+    if (offspr.Fitness < p1.Fitness || offspr.Fitness < p2.Fitness) {
+        Replacement3(p1, p2, offspr);
+    } else {
+        Replacement2(p1, p2, offspr);
+    }
+}
+
+void SteadyStateGA::Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr) {
+    if (offspr.Fitness < p1.Fitness || offspr.Fitness < p2.Fitness) {
+        Replacement3(p1, p2, offspr);
+    }
+}
+
+void SteadyStateGA::Replacement6(const Solution& p1, const Solution& p2, const Solution& offspr) {
+    double r = static_cast< double >(std::rand()) / RAND_MAX;
+    if (r < HYBRID_REPLACEMENT_T) {
+        Replacement3(p1, p2, offspr);
+    } else {
+        Replacement2(p1, p2, offspr);
+    }
+}
+
 // a "steady-state" GA
 void SteadyStateGA::GA() {
     std::time_t begin = std::time(0);
@@ -345,7 +373,7 @@ int main() {
             , &SteadyStateGA::Selection2
             , &SteadyStateGA::Crossover1
             , &SteadyStateGA::Mutation1
-            , &SteadyStateGA::Replacement3);
+            , &SteadyStateGA::Replacement6);
     ga.GA();
     ga.Answer();
     //ga.PrintAllSolutions();
