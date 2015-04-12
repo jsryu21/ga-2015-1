@@ -1,14 +1,14 @@
 all: ga
 
 ga: ga.o test_case.o
-	g++ -o ga -O3 ga.o test_case.o
+	g++ -g -o ga ga.o test_case.o
 	ctags *
 
 ga.o: ga.cpp
-	g++ -c -O3 ga.cpp
+	g++ -g -c ga.cpp
 
 test_case.o: test_case.h test_case.cpp
-	g++ -c -O3 test_case.cpp
+	g++ -g -c test_case.cpp
 
 run: ga
 	./ga < cycle.in > cycle.out
@@ -17,6 +17,9 @@ a: ga
 	./ga < cycle.in
 
 aa: ga
+	./ga < cycle.in.11
+
+aaa: ga
 	./ga < cycle.in
 	./ga < cycle.in.11
 	./ga < cycle.in.101
@@ -28,6 +31,7 @@ clean:
 	rm -f ga
 	rm -f *.o
 	rm -f *.out.*
+	rm -f core
 
 test: ga
 	./ga < cycle.in > cycle.out
