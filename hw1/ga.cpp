@@ -16,6 +16,8 @@ const static double TOURNAMENT_SELECTION_PRESSURE_T = 0.5;
 // http://www.complex-systems.com/pdf/09-3-2.pdf
 // http://en.wikipedia.org/wiki/Tournament_selection
 const static int GENERAL_TOURNAMENT_SELECTION_PRESSURE_K = 5;
+const static double RANK_SELECTION_PRESSURE_MAX = 3;
+const static double RANK_SELECTION_PRESSURE_MIN = 1;
 
 struct Solution
 {
@@ -57,6 +59,7 @@ class SteadyStateGA {
         void Evaluate1(Solution& s);
         void GenerateRandomSolution1(Solution& s);
         void Preprocess1();
+        void Preprocess2();
         void Selection1(Solution& s);
         void Selection2(Solution& s);
         void Selection3(Solution& s);
@@ -157,6 +160,16 @@ void SteadyStateGA::Preprocess1() {
     }
 }
 
+void SteadyStateGA::Preprocess2() {
+    std::sort(population.begin(), population.end());
+    sumOfFitnesses = 0;
+    for (int i = 0; i < PSIZE; ++i) {
+        double adjustedFitness = RANK_SELECTION_PRESSURE_MAX + i * (RANK_SELECTION_PRESSURE_MIN - RANK_SELECTION_PRESSURE_MAX) / (PSIZE - 1);
+        sumOfFitnesses += adjustedFitness;
+        adjustedFitnesses[i] = adjustedFitness;
+    }
+}
+
 // choose one solution from the population
 // currently this operator randomly chooses one w/ uniform Distribution
 void SteadyStateGA::Selection1(Solution& p) {
@@ -165,6 +178,7 @@ void SteadyStateGA::Selection1(Solution& p) {
 }
 
 // Roulette Wheel - Preprocess1
+// Rank - Preprocess2
 void SteadyStateGA::Selection2(Solution& p) {
     double point = static_cast< double >(std::rand()) * sumOfFitnesses / RAND_MAX;
     double sum = 0;
@@ -303,8 +317,8 @@ int main() {
     SteadyStateGA ga(testCase
             , &SteadyStateGA::Evaluate1
             , &SteadyStateGA::GenerateRandomSolution1
-            , NULL
-            , &SteadyStateGA::Selection3
+            , &SteadyStateGA::Preprocess1
+            , &SteadyStateGA::Selection2
             , &SteadyStateGA::Crossover1
             , &SteadyStateGA::Mutation1
             , &SteadyStateGA::Replacement1);
