@@ -11,14 +11,20 @@
 #define CALL_MEMBER_FN(object,ptrToMember)  ((object).*(ptrToMember))
 
 const static int PSIZE = 100; // Size of the population
-const static int ROULETTE_SELECTION_PRESSURE = 3; // 3 ~ 4
-const static double TOURNAMENT_SELECTION_PRESSURE = 0.5;
+const static int ROULETTE_SELECTION_PRESSURE_K = 3; // 3 ~ 4
+const static double TOURNAMENT_SELECTION_PRESSURE_T = 0.5;
+// http://www.complex-systems.com/pdf/09-3-2.pdf
+// http://en.wikipedia.org/wiki/Tournament_selection
+const static int GENERAL_TOURNAMENT_SELECTION_PRESSURE_K = 5;
 
 struct Solution
 {
     Solution(int len);
     std::vector< int > Chromosome;
     double Fitness;
+    bool operator <(const Solution& solution) const {
+        return Fitness < solution.Fitness;
+    }
 };
 
 Solution::Solution(int len) : Chromosome(std::vector< int >(len)),
@@ -145,7 +151,7 @@ void SteadyStateGA::Preprocess1() {
     }
     sumOfFitnesses = 0;
     for (int i = 0; i < PSIZE; ++i) {
-        double adjustedFitness = (maxFitness - population[i].Fitness) + (maxFitness - minFitness) / (ROULETTE_SELECTION_PRESSURE - 1);
+        double adjustedFitness = (maxFitness - population[i].Fitness) + (maxFitness - minFitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
         sumOfFitnesses += adjustedFitness;
         adjustedFitnesses[i] = adjustedFitness;
     }
@@ -158,6 +164,7 @@ void SteadyStateGA::Selection1(Solution& p) {
     p = population[r];
 }
 
+// Roulette Wheel - Preprocess1
 void SteadyStateGA::Selection2(Solution& p) {
     double point = static_cast< double >(std::rand()) * sumOfFitnesses / RAND_MAX;
     double sum = 0;
@@ -170,20 +177,36 @@ void SteadyStateGA::Selection2(Solution& p) {
     }
 }
 
+// Tournament
 void SteadyStateGA::Selection3(Solution& p) {
     int r1 = std::rand() % PSIZE;
     int r2 = std::rand() % PSIZE;
     const Solution& p1 = population[r1];
     const Solution& p2 = population[r2];
-    int r = static_cast< double >(std::rand()) / RAND_MAX;
-    if (TOURNAMENT_SELECTION_PRESSURE > r) {
+    double r = static_cast< double >(std::rand()) / RAND_MAX;
+    if (TOURNAMENT_SELECTION_PRESSURE_T > r) {
         p = (p1.Fitness >= p2.Fitness) ? p1 : p2;
     } else {
         p = (p1.Fitness >= p2.Fitness) ? p2 : p1;
     }
 }
 
+// General Tournament
 void SteadyStateGA::Selection4(Solution& p) {
+    std::vector< Solution > tournament;
+    for (int i = 0; i < GENERAL_TOURNAMENT_SELECTION_PRESSURE_K; ++i) {
+        int r = std::rand() % PSIZE;
+        tournament.push_back(population[r]);
+    }
+    std::sort(tournament.begin(), tournament.end());
+    double r = static_cast< double >(std::rand()) / RAND_MAX;
+    for (int i = 0; i < GENERAL_TOURNAMENT_SELECTION_PRESSURE_K; ++i) {
+        if (TOURNAMENT_SELECTION_PRESSURE_T * std::pow((1 - TOURNAMENT_SELECTION_PRESSURE_T), i) < r) {
+            p = tournament[i];
+            return;
+        }
+    }
+    p = tournament[GENERAL_TOURNAMENT_SELECTION_PRESSURE_K - 1];
 }
 
 // combine the given parents p1 and p2
@@ -281,7 +304,7 @@ int main() {
             , &SteadyStateGA::Evaluate1
             , &SteadyStateGA::GenerateRandomSolution1
             , NULL
-            , &SteadyStateGA::Selection1
+            , &SteadyStateGA::Selection3
             , &SteadyStateGA::Crossover1
             , &SteadyStateGA::Mutation1
             , &SteadyStateGA::Replacement1);
