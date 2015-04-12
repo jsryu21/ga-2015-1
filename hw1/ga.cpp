@@ -27,11 +27,23 @@ struct Solution
     bool operator <(const Solution& solution) const {
         return Fitness < solution.Fitness;
     }
+    bool operator== (const Solution& solution) const {
+        return std::equal(Chromosome.begin(), Chromosome.end(), solution.Chromosome.begin());
+    }
+    friend std::ostream& operator<<(std::ostream& os, const Solution& solution);
 };
 
 Solution::Solution(int len) : Chromosome(std::vector< int >(len)),
     Fitness(std::numeric_limits< double >::max())
 {
+}
+
+std::ostream& operator<<(std::ostream& os, const Solution& solution) {
+    for (int i = 0; i < solution.Chromosome.size(); ++i) {
+        os << solution.Chromosome[i] << " ";
+    }
+    os << ": " << solution.Fitness;
+    return os;
 }
 
 class SteadyStateGA {
@@ -47,7 +59,7 @@ class SteadyStateGA {
         typedef void (SteadyStateGA::*SelectionFn)(Solution& s);
         typedef void (SteadyStateGA::*CrossoverFn)(const Solution& p1, const Solution& p2, Solution& c);
         typedef void (SteadyStateGA::*MutationFn)(Solution& s);
-        typedef void (SteadyStateGA::*ReplacementFn)(const Solution& s);
+        typedef void (SteadyStateGA::*ReplacementFn)(const Solution& p1, const Solution& p2, const Solution& s);
         SteadyStateGA(const TestCase& testCase
                 , EvaluateFn Evaluate_
                 , GenerateRandomSolutionFn GenerateRandomSolution_
@@ -66,7 +78,9 @@ class SteadyStateGA {
         void Selection4(Solution& s);
         void Crossover1(const Solution& p1, const Solution& p2, Solution& c);
         void Mutation1(Solution& s);
-        void Replacement1(const Solution& offspr);
+        void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr);
+        void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr);
+        void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr);
         void GA();
         void Answer();
         void PrintAllSolutions();
@@ -78,7 +92,6 @@ class SteadyStateGA {
         CrossoverFn Crossover;
         MutationFn Mutation;
         ReplacementFn Replacement;
-        void PrintSolution(const Solution& s);
         void Normalize(Solution& s);
 
         int solutionLen;
@@ -189,6 +202,7 @@ void SteadyStateGA::Selection2(Solution& p) {
             return;
         }
     }
+    p = population[PSIZE - 1];
 }
 
 // Tournament
@@ -231,9 +245,15 @@ void SteadyStateGA::Crossover1(const Solution& p1, const Solution& p2, Solution&
     std::vector< int >::const_iterator pointIter = p1.Chromosome.begin() + point;
     std::copy(p1.Chromosome.begin(), pointIter, c.Chromosome.begin());
     int index = point;
-    for (int i = 0; i < solutionLen; ++i) {
-        if (std::find(p1.Chromosome.begin(), pointIter, p2.Chromosome[(i + point) % solutionLen]) == pointIter) {
-            c.Chromosome[index] = p2.Chromosome[(i + point) % solutionLen];
+    for (int i = point; i < solutionLen; ++i) {
+        if (std::find(p1.Chromosome.begin(), pointIter, p2.Chromosome[i]) == pointIter) {
+            c.Chromosome[index] = p2.Chromosome[i];
+            index++;
+        }
+    }
+    for (int i = 0; i < point; ++i) {
+        if (std::find(p1.Chromosome.begin(), pointIter, p2.Chromosome[i]) == pointIter) {
+            c.Chromosome[index] = p2.Chromosome[i];
             index++;
         }
     }
@@ -247,14 +267,29 @@ void SteadyStateGA::Mutation1(Solution& s) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     std::swap(s.Chromosome[p], s.Chromosome[q]); // swap
+    Normalize(s);
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
 // replace one solution from the population with the new offspring
 // currently any random solution can be replaced
-void SteadyStateGA::Replacement1(const Solution& offspr) {
+void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr) {
     int p = std::rand() % PSIZE;
     population[p] = offspr;
+}
+
+// elitism
+void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr) {
+    std::sort(population.begin(), population.end());
+    population.back() = offspr;
+}
+
+// preselection
+void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr) {
+    std::vector< Solution >::iterator iter = std::find(population.begin(), population.end(), (p1.Fitness > p2.Fitness) ? p1 : p2);
+    if (iter != population.end()) {
+        *iter = offspr;
+    }
 }
 
 // a "steady-state" GA
@@ -277,30 +312,19 @@ void SteadyStateGA::GA() {
         CALL_MEMBER_FN(*this, Selection)(p2);
         CALL_MEMBER_FN(*this, Crossover)(p1, p2, c);
         CALL_MEMBER_FN(*this, Mutation)(c);
-        CALL_MEMBER_FN(*this, Replacement)(c);
+        CALL_MEMBER_FN(*this, Replacement)(p1, p2, c);
     }
 }
 
 // print the best solution found to stdout
 void SteadyStateGA::Answer() {
-    PrintSolution(record);
+    std::cout << record << std::endl;
 }
 
 void SteadyStateGA::PrintAllSolutions() {
     for (int i = 0; i < PSIZE; ++i) {
-        PrintSolution(population[i]);
+        std::cout << population[i] << std::endl;
     }
-}
-
-void SteadyStateGA::PrintSolution(const Solution& s) {
-    for (int i = 0; i < solutionLen; ++i) {
-        if (i > 0) {
-            std::cout << " ";
-        }
-        std::cout << s.Chromosome[i] + 1;
-    }
-    std::cout << " : " << s.Fitness;
-    std::cout << std::endl;
 }
 
 void SteadyStateGA::Normalize(Solution& s) {
@@ -321,7 +345,7 @@ int main() {
             , &SteadyStateGA::Selection2
             , &SteadyStateGA::Crossover1
             , &SteadyStateGA::Mutation1
-            , &SteadyStateGA::Replacement1);
+            , &SteadyStateGA::Replacement3);
     ga.GA();
     ga.Answer();
     //ga.PrintAllSolutions();
