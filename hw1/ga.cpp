@@ -17,7 +17,6 @@ const static double TOURNAMENT_SELECTION_PRESSURE = 0.5;
 struct Solution
 {
     Solution(int len);
-    Solution(const Solution& s);
     std::vector< int > Chromosome;
     double Fitness;
 };
@@ -25,12 +24,6 @@ struct Solution
 Solution::Solution(int len) : Chromosome(std::vector< int >(len)),
     Fitness(std::numeric_limits< double >::max())
 {
-}
-
-Solution::Solution(const Solution& s)
-{
-    this->Chromosome = s.Chromosome;
-    this->Fitness = s.Fitness;
 }
 
 class SteadyStateGA {
@@ -198,11 +191,13 @@ void SteadyStateGA::Selection4(Solution& p) {
 // currently the child will be same as p1
 void SteadyStateGA::Crossover1(const Solution& p1, const Solution& p2, Solution& c) {
     int point = std::rand() % solutionLen;
-    std::vector< int >::const_iterator p1PointIterator = p1.Chromosome.begin() + point;
-    std::vector< int >::iterator cInsertIterator = std::copy(p1.Chromosome.begin(), p1PointIterator, c.Chromosome.begin());
+    std::vector< int >::const_iterator pointIter = p1.Chromosome.begin() + point;
+    std::copy(p1.Chromosome.begin(), pointIter, c.Chromosome.begin());
+    int index = point;
     for (int i = 0; i < solutionLen; ++i) {
-        if (std::find(p1.Chromosome.begin(), p1PointIterator, p2.Chromosome[(i + point) % solutionLen]) == p1PointIterator) {
-            cInsertIterator = c.Chromosome.insert(cInsertIterator, p2.Chromosome[(i + point) % solutionLen]);
+        if (std::find(p1.Chromosome.begin(), pointIter, p2.Chromosome[(i + point) % solutionLen]) == pointIter) {
+            c.Chromosome[index] = p2.Chromosome[(i + point) % solutionLen];
+            index++;
         }
     }
     Normalize(c);
@@ -272,12 +267,9 @@ void SteadyStateGA::PrintSolution(const Solution& s) {
 }
 
 void SteadyStateGA::Normalize(Solution& s) {
-    /*
     std::copy(s.Chromosome.begin(), s.Chromosome.end(), tempSolution.Chromosome.begin());
     std::vector< int >::iterator zeroIter = std::find(tempSolution.Chromosome.begin(), tempSolution.Chromosome.end(), 0);
-    std::vector< int >::iterator aaaa = std::copy(zeroIter, tempSolution.Chromosome.end(), s.Chromosome.begin());
-    std::copy(tempSolution.Chromosome.begin(), zeroIter, aaaa);
-    */
+    std::copy(tempSolution.Chromosome.begin(), zeroIter, std::copy(zeroIter, tempSolution.Chromosome.end(), s.Chromosome.begin()));
 }
 
 int main() {
