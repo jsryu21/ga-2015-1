@@ -3,3 +3,4 @@ ga
 *.out
 *.out.*
 tags
+core
