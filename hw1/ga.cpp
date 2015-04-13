@@ -89,7 +89,6 @@ class SteadyStateGA {
         void Mutation7(Solution& s);
         void Mutation8(Solution& s);
         void Mutation9(Solution& s);
-        void Mutation10(Solution& s);
         void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr);
@@ -308,7 +307,6 @@ void SteadyStateGA::Mutation2(Solution& s) {
 
 // range shuffle
 void SteadyStateGA::Mutation3(Solution& s) {
-    std::vector< int > genes;
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     if (p > q) {
@@ -319,9 +317,8 @@ void SteadyStateGA::Mutation3(Solution& s) {
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
-// inversion
+// inversion == 2-change(two-change)
 void SteadyStateGA::Mutation4(Solution& s) {
-    std::vector< int > genes;
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     if (p > q) {
@@ -332,28 +329,61 @@ void SteadyStateGA::Mutation4(Solution& s) {
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
-// two change
+// double bridge kick move
 void SteadyStateGA::Mutation5(Solution& s) {
 }
 
-// double bridge kick move
+// hybrid - double bridge kick move : inversion = 1 : 9
 void SteadyStateGA::Mutation6(Solution& s) {
-}
-
-// hybrid - double bridge kick move : two change : inversion = 1:3:6
-void SteadyStateGA::Mutation7(Solution& s) {
+    int r = std::rand() % 10;
+    if (r < 1) {
+        Mutation5(s);
+    } else {
+        Mutation4(s);
+    }
 }
 
 // or change
-void SteadyStateGA::Mutation8(Solution& s) {
+void SteadyStateGA::Mutation7(Solution& s) {
+    int p = std::rand() % solutionLen;
+    int q = std::rand() % solutionLen;
+    while (p == q) {
+        q = std::rand() % solutionLen;
+    }
+    if (p > q) {
+        std::swap(p, q);
+    }
+    int gene = s.Chromosome[p];
+    std::rotate(s.Chromosome.begin() + p, s.Chromosome.begin() + p + 1, s.Chromosome.begin() + q + 1);
+    s.Chromosome[q] = gene;
+    Normalize(s);
+    CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
 // swap change
-void SteadyStateGA::Mutation9(Solution& s) {
+void SteadyStateGA::Mutation8(Solution& s) {
 }
 
 // fully hybrid
-void SteadyStateGA::Mutation10(Solution& s) {
+void SteadyStateGA::Mutation9(Solution& s) {
+    int r = std::rand() % 8;
+    if (r == 0) {
+        Mutation1(s);
+    } else if (r == 1) {
+        Mutation2(s);
+    } else if (r == 2) {
+        Mutation3(s);
+    } else if (r == 3) {
+        Mutation4(s);
+    } else if (r == 4) {
+        Mutation5(s);
+    } else if (r == 5) {
+        Mutation6(s);
+    } else if (r == 6) {
+        Mutation7(s);
+    } else if (r == 7) {
+        Mutation8(s);
+    }
 }
 
 // replace one solution from the population with the new offspring
@@ -452,7 +482,7 @@ int main() {
             , &SteadyStateGA::Preprocess1
             , &SteadyStateGA::Selection2
             , &SteadyStateGA::Crossover1
-            , &SteadyStateGA::Mutation4
+            , &SteadyStateGA::Mutation7
             , &SteadyStateGA::Replacement6);
     ga.GA();
     ga.Answer();
