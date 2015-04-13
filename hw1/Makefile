@@ -1,31 +1,26 @@
 all: ga
 
 ga: ga.o test_case.o
-	g++ -g -o ga ga.o test_case.o
+	#g++ -g -o ga ga.o test_case.o
+	g++ -O3 -o ga ga.o test_case.o
 	ctags *
 
 ga.o: ga.cpp
-	g++ -g -c ga.cpp
+	#g++ -g -c ga.cpp
+	g++ -O3 -c ga.cpp
 
 test_case.o: test_case.h test_case.cpp
-	g++ -g -c test_case.cpp
+	#g++ -g -c test_case.cpp
+	g++ -O3 -c test_case.cpp
 
 run: ga
 	./ga < cycle.in > cycle.out
 
 a: ga
-	./ga < cycle.in
+	./ga < cycle.in.11
 
 aa: ga
-	./ga < cycle.in.11
-
-aaa: ga
-	./ga < cycle.in
-	./ga < cycle.in.11
 	./ga < cycle.in.101
-	./ga < cycle.in.21
-	./ga < cycle.in.318
-	./ga < cycle.in.51
 
 clean:
 	rm -f ga

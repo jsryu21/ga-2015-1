@@ -80,6 +80,11 @@ class SteadyStateGA {
         void Selection3(Solution& s);
         void Selection4(Solution& s);
         void Crossover1(const Solution& p1, const Solution& p2, Solution& c);
+        void Crossover2(const Solution& p1, const Solution& p2, Solution& c);
+        void Crossover3(const Solution& p1, const Solution& p2, Solution& c);
+        void Crossover4(const Solution& p1, const Solution& p2, Solution& c);
+        void Crossover5(const Solution& p1, const Solution& p2, Solution& c);
+        void Crossover6(const Solution& p1, const Solution& p2, Solution& c);
         void Mutation1(Solution& s);
         void Mutation2(Solution& s);
         void Mutation3(Solution& s);
@@ -88,7 +93,6 @@ class SteadyStateGA {
         void Mutation6(Solution& s);
         void Mutation7(Solution& s);
         void Mutation8(Solution& s);
-        void Mutation9(Solution& s);
         void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr);
@@ -276,8 +280,110 @@ void SteadyStateGA::Crossover1(const Solution& p1, const Solution& p2, Solution&
     CALL_MEMBER_FN(*this, Evaluate)(c);
 }
 
+// order crossover
+void SteadyStateGA::Crossover2(const Solution& p1, const Solution& p2, Solution& c) {
+    int p = std::rand() % solutionLen;
+    int q = std::rand() % solutionLen;
+    while (p == q) {
+        q = std::rand() % solutionLen;
+    }
+    if (p > q) {
+        std::swap(p, q);
+    }
+    std::vector< int >::const_iterator pIter = p1.Chromosome.begin() + p;
+    std::vector< int >::const_iterator qIter = p1.Chromosome.begin() + q;
+    std::copy(pIter, qIter, c.Chromosome.begin() + p);
+    int index = 0;
+    for (int i = q; i < solutionLen; ++i) {
+        if (std::find(pIter, qIter, p2.Chromosome[i]) == qIter) {
+            if (index < p) {
+                c.Chromosome[index] = p2.Chromosome[i];
+                index++;
+            } else if (index < q) {
+                c.Chromosome[q] = p2.Chromosome[i];
+                index = q + 1;
+            } else {
+                c.Chromosome[index] = p2.Chromosome[i];
+                index++;
+            }
+        }
+    }
+    for (int i = 0; i < q; ++i) {
+        if (std::find(pIter, qIter, p2.Chromosome[i]) == qIter) {
+            if (index < p) {
+                c.Chromosome[index] = p2.Chromosome[i];
+                index++;
+            } else if (index < q) {
+                c.Chromosome[q] = p2.Chromosome[i];
+                index = q + 1;
+            } else {
+                c.Chromosome[index] = p2.Chromosome[i];
+                index++;
+            }
+        }
+    }
+    Normalize(c);
+    CALL_MEMBER_FN(*this, Evaluate)(c);
+}
+
+// cycle crossover
+void SteadyStateGA::Crossover3(const Solution& p1, const Solution& p2, Solution& c) {
+    int turn = 0;
+    std::vector< bool > flags(solutionLen, false);
+    std::vector< bool >::iterator iter = std::find(flags.begin(), flags.end(), false);
+    while (iter != flags.end()) {
+        if (turn == 0) {
+            int index = std::distance(flags.begin(), iter);
+            int p1Gene = p1.Chromosome[index];
+            int p2Gene = p2.Chromosome[index];
+            c.Chromosome[index] = p1.Chromosome[index];
+            flags[index] = true;
+            while (p1Gene != p2Gene) {
+                index = std::distance(p1.Chromosome.begin(), std::find(p1.Chromosome.begin(), p1.Chromosome.end(), p2Gene));
+                c.Chromosome[index] = p1.Chromosome[index];
+                p2Gene = p2.Chromosome[index];
+                flags[index] = true;
+            }
+            iter = std::find(flags.begin(), flags.end(), false);
+        } else {
+            int index = std::distance(flags.begin(), iter);
+            int p2Gene = p2.Chromosome[index];
+            int p1Gene = p1.Chromosome[index];
+            c.Chromosome[index] = p2.Chromosome[index];
+            flags[index] = true;
+            while (p2Gene != p1Gene) {
+                index = std::distance(p2.Chromosome.begin(), std::find(p2.Chromosome.begin(), p2.Chromosome.end(), p1Gene));
+                c.Chromosome[index] = p2.Chromosome[index];
+                p1Gene = p1.Chromosome[index];
+                flags[index] = true;
+            }
+            iter = std::find(flags.begin(), flags.end(), false);
+        }
+    }
+    Normalize(c);
+    CALL_MEMBER_FN(*this, Evaluate)(c);
+}
+
+// PMX : partially matched crossover
+void SteadyStateGA::Crossover4(const Solution& p1, const Solution& p2, Solution& c) {
+    Normalize(c);
+    CALL_MEMBER_FN(*this, Evaluate)(c);
+}
+
+// edge recombination
+void SteadyStateGA::Crossover5(const Solution& p1, const Solution& p2, Solution& c) {
+    Normalize(c);
+    CALL_MEMBER_FN(*this, Evaluate)(c);
+}
+
+// hybrid
+void SteadyStateGA::Crossover6(const Solution& p1, const Solution& p2, Solution& c) {
+    Normalize(c);
+    CALL_MEMBER_FN(*this, Evaluate)(c);
+}
+
 // mutate the solution s
-// two swap
+// two-swap or swap-change
 void SteadyStateGA::Mutation1(Solution& s) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
@@ -331,6 +437,26 @@ void SteadyStateGA::Mutation4(Solution& s) {
 
 // double bridge kick move
 void SteadyStateGA::Mutation5(Solution& s) {
+    if (solutionLen < 4) {
+        return;
+    }
+    std::vector< int > rs;
+    for (int i = 0; i < 3; ++i) {
+        int r = std::rand() % (solutionLen - 1);
+        while (std::find(rs.begin(), rs.end(), r) != rs.end()) {
+            r = std::rand() % (solutionLen - 1);
+        }
+        rs.push_back(r + 1);
+    }
+    std::sort(rs.begin(), rs.end());
+    std::vector< int > mutatedGenes(solutionLen);
+    std::vector< int >::iterator iter = std::copy(s.Chromosome.begin() + rs[2], s.Chromosome.end(), mutatedGenes.begin());
+    iter = std::copy(s.Chromosome.begin() + rs[1], s.Chromosome.begin() + rs[2], iter);
+    iter = std::copy(s.Chromosome.begin() + rs[0], s.Chromosome.begin() + rs[1], iter);
+    std::copy(s.Chromosome.begin(), s.Chromosome.begin() + rs[0], iter);
+    std::copy(mutatedGenes.begin(), mutatedGenes.end(), s.Chromosome.begin());
+    Normalize(s);
+    CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
 // hybrid - double bridge kick move : inversion = 1 : 9
@@ -360,13 +486,9 @@ void SteadyStateGA::Mutation7(Solution& s) {
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
-// swap change
-void SteadyStateGA::Mutation8(Solution& s) {
-}
-
 // fully hybrid
-void SteadyStateGA::Mutation9(Solution& s) {
-    int r = std::rand() % 8;
+void SteadyStateGA::Mutation8(Solution& s) {
+    int r = std::rand() % 6;
     if (r == 0) {
         Mutation1(s);
     } else if (r == 1) {
@@ -378,11 +500,7 @@ void SteadyStateGA::Mutation9(Solution& s) {
     } else if (r == 4) {
         Mutation5(s);
     } else if (r == 5) {
-        Mutation6(s);
-    } else if (r == 6) {
         Mutation7(s);
-    } else if (r == 7) {
-        Mutation8(s);
     }
 }
 
@@ -481,8 +599,8 @@ int main() {
             , &SteadyStateGA::GenerateRandomSolution1
             , &SteadyStateGA::Preprocess1
             , &SteadyStateGA::Selection2
-            , &SteadyStateGA::Crossover1
-            , &SteadyStateGA::Mutation7
+            , &SteadyStateGA::Crossover3
+            , &SteadyStateGA::Mutation8
             , &SteadyStateGA::Replacement6);
     ga.GA();
     ga.Answer();
