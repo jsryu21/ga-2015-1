@@ -5,6 +5,7 @@
 #include <vector>
 #include <limits>
 #include <algorithm>
+#include <iterator>
 #include "test_case.h"
 
 // https://isocpp.org/wiki/faq/pointers-to-members
@@ -84,6 +85,11 @@ class SteadyStateGA {
         void Mutation3(Solution& s);
         void Mutation4(Solution& s);
         void Mutation5(Solution& s);
+        void Mutation6(Solution& s);
+        void Mutation7(Solution& s);
+        void Mutation8(Solution& s);
+        void Mutation9(Solution& s);
+        void Mutation10(Solution& s);
         void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr);
@@ -272,7 +278,7 @@ void SteadyStateGA::Crossover1(const Solution& p1, const Solution& p2, Solution&
 }
 
 // mutate the solution s
-// currently this operator does nothing
+// two swap
 void SteadyStateGA::Mutation1(Solution& s) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
@@ -300,14 +306,54 @@ void SteadyStateGA::Mutation2(Solution& s) {
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
-// inversion
+// range shuffle
 void SteadyStateGA::Mutation3(Solution& s) {
+    std::vector< int > genes;
+    int p = std::rand() % solutionLen;
+    int q = std::rand() % solutionLen;
+    if (p > q) {
+        std::swap(p, q);
+    }
+    std::random_shuffle(s.Chromosome.begin() + p, s.Chromosome.begin() + q);
+    Normalize(s);
+    CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
+// inversion
 void SteadyStateGA::Mutation4(Solution& s) {
+    std::vector< int > genes;
+    int p = std::rand() % solutionLen;
+    int q = std::rand() % solutionLen;
+    if (p > q) {
+        std::swap(p, q);
+    }
+    std::reverse(s.Chromosome.begin() + p, s.Chromosome.begin() + q);
+    Normalize(s);
+    CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
+// two change
 void SteadyStateGA::Mutation5(Solution& s) {
+}
+
+// double bridge kick move
+void SteadyStateGA::Mutation6(Solution& s) {
+}
+
+// hybrid - double bridge kick move : two change : inversion = 1:3:6
+void SteadyStateGA::Mutation7(Solution& s) {
+}
+
+// or change
+void SteadyStateGA::Mutation8(Solution& s) {
+}
+
+// swap change
+void SteadyStateGA::Mutation9(Solution& s) {
+}
+
+// fully hybrid
+void SteadyStateGA::Mutation10(Solution& s) {
 }
 
 // replace one solution from the population with the new offspring
@@ -406,8 +452,8 @@ int main() {
             , &SteadyStateGA::Preprocess1
             , &SteadyStateGA::Selection2
             , &SteadyStateGA::Crossover1
-            , &SteadyStateGA::Mutation2
-            , &SteadyStateGA::Replacement2);
+            , &SteadyStateGA::Mutation4
+            , &SteadyStateGA::Replacement6);
     ga.GA();
     ga.Answer();
     //ga.PrintAllSolutions();
