@@ -19,6 +19,7 @@ const static int GENERAL_TOURNAMENT_SELECTION_PRESSURE_K = 5;
 const static double RANK_SELECTION_PRESSURE_MAX = 3;
 const static double RANK_SELECTION_PRESSURE_MIN = 1;
 const static double HYBRID_REPLACEMENT_T = 0.8;
+const static double TYPICAL_MUTATION_THRESHOLD = 0.5;
 
 struct Solution
 {
@@ -79,6 +80,10 @@ class SteadyStateGA {
         void Selection4(Solution& s);
         void Crossover1(const Solution& p1, const Solution& p2, Solution& c);
         void Mutation1(Solution& s);
+        void Mutation2(Solution& s);
+        void Mutation3(Solution& s);
+        void Mutation4(Solution& s);
+        void Mutation5(Solution& s);
         void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr);
@@ -276,6 +281,35 @@ void SteadyStateGA::Mutation1(Solution& s) {
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
+// typical mutation for tsp
+void SteadyStateGA::Mutation2(Solution& s) {
+    std::vector< int > mutatedGenes;
+    std::vector< int > mutatedGenesIndex;
+    for (int i = 0; i < solutionLen; ++i) {
+        double r = static_cast< double >(std::rand()) / RAND_MAX;
+        if (r < TYPICAL_MUTATION_THRESHOLD) {
+            mutatedGenes.push_back(s.Chromosome[i]);
+            mutatedGenesIndex.push_back(i);
+        }
+    }
+    std::random_shuffle(mutatedGenes.begin(), mutatedGenes.end());
+    for (int i = 0; i < mutatedGenesIndex.size(); ++i) {
+        s.Chromosome[mutatedGenesIndex[i]] = mutatedGenes[i];
+    }
+    Normalize(s);
+    CALL_MEMBER_FN(*this, Evaluate)(s);
+}
+
+// inversion
+void SteadyStateGA::Mutation3(Solution& s) {
+}
+
+void SteadyStateGA::Mutation4(Solution& s) {
+}
+
+void SteadyStateGA::Mutation5(Solution& s) {
+}
+
 // replace one solution from the population with the new offspring
 // currently any random solution can be replaced
 void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr) {
@@ -372,8 +406,8 @@ int main() {
             , &SteadyStateGA::Preprocess1
             , &SteadyStateGA::Selection2
             , &SteadyStateGA::Crossover1
-            , &SteadyStateGA::Mutation1
-            , &SteadyStateGA::Replacement6);
+            , &SteadyStateGA::Mutation2
+            , &SteadyStateGA::Replacement2);
     ga.GA();
     ga.Answer();
     //ga.PrintAllSolutions();
