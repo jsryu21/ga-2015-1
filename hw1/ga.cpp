@@ -116,6 +116,7 @@ class SteadyStateGA {
         // population of solutions
         std::vector< Solution > population;
         Solution record;
+        double maxFitness;
         Solution randomSolution;
         Solution tempSolution;
         std::vector< double > adjustedFitnesses;
@@ -134,6 +135,7 @@ SteadyStateGA::SteadyStateGA(const TestCase& testCase
     timeLimit(testCase.TimeLimit),
     population(PSIZE, Solution(solutionLen)),
     record(solutionLen),
+    maxFitness(0),
     randomSolution(solutionLen),
     tempSolution(solutionLen),
     adjustedFitnesses(PSIZE),
@@ -161,6 +163,8 @@ void SteadyStateGA::Evaluate1(Solution& s) {
     s.Fitness += solutionDist[s.Chromosome[end]][s.Chromosome[0]];
     if (s.Fitness < record.Fitness) {
         record = s;
+    } else if (s.Fitness > maxFitness) {
+        maxFitness = s.Fitness;
     }
 }
 
@@ -174,15 +178,10 @@ void SteadyStateGA::GenerateRandomSolution1(Solution& s) {
 }
 
 void SteadyStateGA::Preprocess1() {
-    double maxFitness = 0;
-    double minFitness = std::numeric_limits< double >::max();
-    for (int i = 0; i < PSIZE; ++i) {
-        maxFitness = std::max(maxFitness, population[i].Fitness);
-        minFitness = std::min(minFitness, population[i].Fitness);
-    }
     sumOfFitnesses = 0;
+    double offset = maxFitness + (maxFitness - record.Fitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
     for (int i = 0; i < PSIZE; ++i) {
-        double adjustedFitness = (maxFitness - population[i].Fitness) + (maxFitness - minFitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
+        double adjustedFitness = offset - population[i].Fitness;
         sumOfFitnesses += adjustedFitness;
         adjustedFitnesses[i] = adjustedFitness;
     }
@@ -552,6 +551,15 @@ void SteadyStateGA::Mutation6(Solution& s) {
 // currently any random solution can be replaced
 void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr) {
     int p = std::rand() % PSIZE;
+
+    if (Preprocess == &SteadyStateGA::Preprocess1) {
+        sumOfFitnesses -= adjustedFitnesses[p];
+        double offset = maxFitness + (maxFitness - record.Fitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
+        double adjustedFitness = offset - offspr.Fitness;
+        sumOfFitnesses += adjustedFitness;
+        adjustedFitnesses[p] = adjustedFitness;
+    }
+
     population[p] = offspr;
 }
 
@@ -564,6 +572,15 @@ void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const S
             worstIndex = i;
         }
     }
+
+    if (Preprocess == &SteadyStateGA::Preprocess1) {
+        sumOfFitnesses -= adjustedFitnesses[worstIndex];
+        double offset = maxFitness + (maxFitness - record.Fitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
+        double adjustedFitness = offset - offspr.Fitness;
+        sumOfFitnesses += adjustedFitness;
+        adjustedFitnesses[worstIndex] = adjustedFitness;
+    }
+
     population[worstIndex] = offspr;
 }
 
@@ -571,6 +588,15 @@ void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const S
 void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr) {
     std::vector< Solution >::iterator iter = std::find(population.begin(), population.end(), (p1.Fitness > p2.Fitness) ? p1 : p2);
     if (iter != population.end()) {
+        if (Preprocess == &SteadyStateGA::Preprocess1) {
+            int index = std::distance(population.begin(), iter);
+            sumOfFitnesses -= adjustedFitnesses[index];
+            double offset = maxFitness + (maxFitness - record.Fitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
+            double adjustedFitness = offset - offspr.Fitness;
+            sumOfFitnesses += adjustedFitness;
+            adjustedFitnesses[index] = adjustedFitness;
+        }
+
         *iter = offspr;
     }
 }
@@ -595,6 +621,9 @@ void SteadyStateGA::GA() {
     for (int i = 0; i < PSIZE; ++i) {
         CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
     }
+    if (Preprocess) {
+        CALL_MEMBER_FN(*this, Preprocess)();
+    }
     while (true) {
         if (std::time(0) - begin > timeLimit - 1) {
             return; // end condition
@@ -602,9 +631,6 @@ void SteadyStateGA::GA() {
         Solution p1(solutionLen);
         Solution p2(solutionLen);
         Solution c(solutionLen);
-        if (Preprocess) {
-            CALL_MEMBER_FN(*this, Preprocess)();
-        }
         CALL_MEMBER_FN(*this, Selection)(p1);
         CALL_MEMBER_FN(*this, Selection)(p2);
         CALL_MEMBER_FN(*this, Crossover)(p1, p2, c);
