@@ -6,6 +6,7 @@
 #include <limits>
 #include <algorithm>
 #include <iterator>
+#include <set>
 #include "test_case.h"
 
 // https://isocpp.org/wiki/faq/pointers-to-members
@@ -366,12 +367,82 @@ void SteadyStateGA::Crossover3(const Solution& p1, const Solution& p2, Solution&
 
 // PMX : partially matched crossover
 void SteadyStateGA::Crossover4(const Solution& p1, const Solution& p2, Solution& c) {
+    int p = std::rand() % solutionLen;
+    int q = std::rand() % solutionLen;
+    while (p == q) {
+        q = std::rand() % solutionLen;
+    }
+    if (p > q) {
+        std::swap(p, q);
+    }
+    std::vector< int >::const_iterator p1PIter = p1.Chromosome.begin() + p;
+    std::vector< int >::const_iterator p1QIter = p1.Chromosome.begin() + q;
+    std::vector< int >::const_iterator p2PIter = p2.Chromosome.begin() + p;
+    std::vector< int >::const_iterator p2QIter = p2.Chromosome.begin() + q;
+    std::vector< int >::iterator cIter = std::copy(p2.Chromosome.begin(), p2PIter, c.Chromosome.begin());
+    cIter = std::copy(p1PIter, p1QIter, cIter);
+    std::copy(p2QIter, p2.Chromosome.end(), cIter);
+    for (int i = 0; i < p; ++i) {
+        int cGene = c.Chromosome[i];
+        int p2Gene = p2.Chromosome[i];
+        std::vector< int >::const_iterator p1Iter = std::find(p1PIter, p1QIter, cGene);
+        while (p1Iter != p1QIter) {
+            p2Gene = p2.Chromosome[std::distance(p1.Chromosome.begin(), p1Iter)];
+            p1Iter = std::find(p1PIter, p1QIter, p2Gene);
+        }
+        c.Chromosome[i] = p2Gene;
+    }
+    for (int i = q; i < solutionLen; ++i) {
+        int cGene = c.Chromosome[i];
+        int p2Gene = p2.Chromosome[i];
+        std::vector< int >::const_iterator p1Iter = std::find(p1PIter, p1QIter, cGene);
+        while (p1Iter != p1QIter) {
+            p2Gene = p2.Chromosome[std::distance(p1.Chromosome.begin(), p1Iter)];
+            p1Iter = std::find(p1PIter, p1QIter, p2Gene);
+        }
+        c.Chromosome[i] = p2Gene;
+    }
     Normalize(c);
     CALL_MEMBER_FN(*this, Evaluate)(c);
 }
 
 // edge recombination
+// http://www.rubicite.com/Tutorials/GeneticAlgorithms/CrossoverOperators/EdgeRecombinationCrossoverOperator.aspx
 void SteadyStateGA::Crossover5(const Solution& p1, const Solution& p2, Solution& c) {
+    std::vector< std::set< int > > neighborList(solutionLen);
+    for (int i = 0; i < solutionLen; ++i) {
+        neighborList[i].insert(p1.Chromosome[(i + solutionLen - 1) % solutionLen]);
+        neighborList[i].insert(p1.Chromosome[(i + 1) % solutionLen]);
+        neighborList[i].insert(p2.Chromosome[(i + solutionLen - 1) % solutionLen]);
+        neighborList[i].insert(p2.Chromosome[(i + 1) % solutionLen]);
+    }
+    int city = 0;
+    int index = 0;
+    while (true) {
+        c.Chromosome[index++] = city;
+        if (index >= solutionLen) {
+            break;
+        }
+        for (int i = 0; i < solutionLen; ++i) {
+            neighborList[i].erase(city);
+        }
+        if (neighborList[city].size() == 0) {
+            // random node not already in CHILD
+            city = std::rand() % solutionLen;
+            while (std::find(c.Chromosome.begin(), c.Chromosome.begin() + index, city) != c.Chromosome.begin() + index) {
+                city = std::rand() % solutionLen;
+            }
+        } else {
+            int fewest = 5;
+            std::set< int > neighbors = neighborList[city];
+            for (std::set< int >::iterator iter = neighbors.begin(); iter != neighbors.end(); ++iter) {
+                if (neighborList[*iter].size() < fewest) {
+                    city = *iter;
+                    fewest = neighborList[*iter].size();
+                }
+            }
+        }
+    }
     Normalize(c);
     CALL_MEMBER_FN(*this, Evaluate)(c);
 }
@@ -599,7 +670,7 @@ int main() {
             , &SteadyStateGA::GenerateRandomSolution1
             , &SteadyStateGA::Preprocess1
             , &SteadyStateGA::Selection2
-            , &SteadyStateGA::Crossover3
+            , &SteadyStateGA::Crossover5
             , &SteadyStateGA::Mutation8
             , &SteadyStateGA::Replacement6);
     ga.GA();
