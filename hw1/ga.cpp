@@ -119,6 +119,7 @@ class SteadyStateGA {
         Solution randomSolution;
         Solution tempSolution;
         std::vector< double > adjustedFitnesses;
+        std::vector< double > cumulativeFitnesses;
         double sumOfFitnesses;
 };
 
@@ -138,6 +139,7 @@ SteadyStateGA::SteadyStateGA(const TestCase& testCase
     randomSolution(solutionLen),
     tempSolution(solutionLen),
     adjustedFitnesses(PSIZE),
+    cumulativeFitnesses(PSIZE),
     sumOfFitnesses(0),
     Evaluate(Evaluate_),
     GenerateRandomSolution(GenerateRandomSolution_),
@@ -184,6 +186,10 @@ void SteadyStateGA::Preprocess1() {
         sumOfFitnesses += adjustedFitness;
         adjustedFitnesses[i] = adjustedFitness;
     }
+    cumulativeFitnesses[0] = adjustedFitnesses[0];
+    for (int i = 1; i < PSIZE; ++i) {
+        cumulativeFitnesses[i] = cumulativeFitnesses[i - 1] + adjustedFitnesses[i];
+    }
 }
 
 // choose one solution from the population
@@ -196,16 +202,13 @@ void SteadyStateGA::Selection1(Solution& p) {
 // Roulette Wheel - Preprocess1
 void SteadyStateGA::Selection2(Solution& p) {
     double point = static_cast< double >(std::rand()) * sumOfFitnesses / RAND_MAX;
-    double sum = 0;
-    for (int i = 0; i < PSIZE; ++i) {
-        sum += adjustedFitnesses[i];
-        if (point < sum) {
-            p = population[i];
-            return;
-        }
+    std::vector< double >::iterator it = std::lower_bound(cumulativeFitnesses.begin(), cumulativeFitnesses.end(), point);
+    if (it != cumulativeFitnesses.end()) {
+        p = population[std::distance(cumulativeFitnesses.begin(), it)];
+    } else {
+        // http://valgrind.org/gallery/linux_mag.html
+        p = population[PSIZE - 1];
     }
-    // http://valgrind.org/gallery/linux_mag.html
-    p = population[PSIZE - 1];
 }
 
 // Tournament
@@ -554,6 +557,11 @@ void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const S
         double adjustedFitness = offset - offspr.Fitness;
         sumOfFitnesses += adjustedFitness;
         adjustedFitnesses[p] = adjustedFitness;
+        if (p == 0) {
+            cumulativeFitnesses[0] = adjustedFitnesses[0];
+        } else {
+            cumulativeFitnesses[p] = cumulativeFitnesses[p - 1] + adjustedFitnesses[p];
+        }
     }
 
     population[p] = offspr;
@@ -575,6 +583,11 @@ void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const S
         double adjustedFitness = offset - offspr.Fitness;
         sumOfFitnesses += adjustedFitness;
         adjustedFitnesses[worstIndex] = adjustedFitness;
+        if (worstIndex == 0) {
+            cumulativeFitnesses[0] = adjustedFitnesses[0];
+        } else {
+            cumulativeFitnesses[worstIndex] = cumulativeFitnesses[worstIndex - 1] + adjustedFitnesses[worstIndex];
+        }
     }
 
     population[worstIndex] = offspr;
@@ -591,6 +604,11 @@ void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const S
             double adjustedFitness = offset - offspr.Fitness;
             sumOfFitnesses += adjustedFitness;
             adjustedFitnesses[index] = adjustedFitness;
+            if (index == 0) {
+                cumulativeFitnesses[0] = adjustedFitnesses[0];
+            } else {
+                cumulativeFitnesses[index] = cumulativeFitnesses[index - 1] + adjustedFitnesses[index];
+            }
         }
 
         *iter = offspr;
