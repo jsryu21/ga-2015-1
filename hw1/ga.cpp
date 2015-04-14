@@ -75,7 +75,6 @@ class SteadyStateGA {
         void Evaluate1(Solution& s);
         void GenerateRandomSolution1(Solution& s);
         void Preprocess1();
-        void Preprocess2();
         void Selection1(Solution& s);
         void Selection2(Solution& s);
         void Selection3(Solution& s);
@@ -187,16 +186,6 @@ void SteadyStateGA::Preprocess1() {
     }
 }
 
-void SteadyStateGA::Preprocess2() {
-    std::sort(population.begin(), population.end());
-    sumOfFitnesses = 0;
-    for (int i = 0; i < PSIZE; ++i) {
-        double adjustedFitness = RANK_SELECTION_PRESSURE_MAX + i * (RANK_SELECTION_PRESSURE_MIN - RANK_SELECTION_PRESSURE_MAX) / (PSIZE - 1);
-        sumOfFitnesses += adjustedFitness;
-        adjustedFitnesses[i] = adjustedFitness;
-    }
-}
-
 // choose one solution from the population
 // currently this operator randomly chooses one w/ uniform Distribution
 void SteadyStateGA::Selection1(Solution& p) {
@@ -205,7 +194,6 @@ void SteadyStateGA::Selection1(Solution& p) {
 }
 
 // Roulette Wheel - Preprocess1
-// Rank - Preprocess2
 void SteadyStateGA::Selection2(Solution& p) {
     double point = static_cast< double >(std::rand()) * sumOfFitnesses / RAND_MAX;
     double sum = 0;
@@ -679,14 +667,10 @@ int main(int argc, char* argv[]) {
                 Selection = &SteadyStateGA::Selection2;
                 break;
             case '2':
-                Preprocess = &SteadyStateGA::Preprocess2;
-                Selection = &SteadyStateGA::Selection2;
-                break;
-            case '3':
                 Preprocess = NULL;
                 Selection = &SteadyStateGA::Selection3;
                 break;
-            case '4':
+            case '3':
                 Preprocess = NULL;
                 Selection = &SteadyStateGA::Selection4;
                 break;
