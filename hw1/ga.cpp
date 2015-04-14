@@ -257,17 +257,33 @@ void SteadyStateGA::Crossover2(const Solution& p1, const Solution& p2, Solution&
     std::vector< int >::const_iterator pointIter = p1.Chromosome.begin() + point;
     std::copy(p1.Chromosome.begin(), pointIter, c.Chromosome.begin());
     int index = point;
+    bool checkExistence = 2 * point < solutionLen;
     for (int i = point; i < solutionLen; ++i) {
-        if (std::find(p1.Chromosome.begin(), pointIter, p2.Chromosome[i]) == pointIter) {
-            c.Chromosome[index] = p2.Chromosome[i];
-            index++;
+        if (checkExistence) {
+            if (std::find(p1.Chromosome.begin(), pointIter, p2.Chromosome[i]) == pointIter) {
+                c.Chromosome[index] = p2.Chromosome[i];
+                index++;
+            }
+        } else {
+            if (std::find(pointIter, p1.Chromosome.end(), p2.Chromosome[i]) != p1.Chromosome.end()) {
+                c.Chromosome[index] = p2.Chromosome[i];
+                index++;
+            }
         }
     }
     for (int i = 0; i < point; ++i) {
-        if (std::find(p1.Chromosome.begin(), pointIter, p2.Chromosome[i]) == pointIter) {
-            c.Chromosome[index] = p2.Chromosome[i];
-            index++;
+        if (checkExistence) {
+            if (std::find(p1.Chromosome.begin(), pointIter, p2.Chromosome[i]) == pointIter) {
+                c.Chromosome[index] = p2.Chromosome[i];
+                index++;
+            }
+        } else {
+            if (std::find(pointIter, p1.Chromosome.end(), p2.Chromosome[i]) != p1.Chromosome.end()) {
+                c.Chromosome[index] = p2.Chromosome[i];
+                index++;
+            }
         }
+
     }
     Normalize(c);
     CALL_MEMBER_FN(*this, Evaluate)(c);
