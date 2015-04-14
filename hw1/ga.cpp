@@ -21,7 +21,7 @@ const static int GENERAL_TOURNAMENT_SELECTION_PRESSURE_K = 5;
 const static double RANK_SELECTION_PRESSURE_MAX = 3;
 const static double RANK_SELECTION_PRESSURE_MIN = 1;
 const static double HYBRID_REPLACEMENT_T = 0.8;
-const static double TYPICAL_MUTATION_THRESHOLD = 0.5;
+const static double TYPICAL_MUTATION_THRESHOLD = 0.125;
 
 struct Solution
 {
@@ -467,18 +467,12 @@ void SteadyStateGA::Mutation1(Solution& s) {
 
 // typical mutation for tsp
 void SteadyStateGA::Mutation2(Solution& s) {
-    std::vector< int > mutatedGenes;
-    std::vector< int > mutatedGenesIndex;
     for (int i = 0; i < solutionLen; ++i) {
         double r = static_cast< double >(std::rand()) / RAND_MAX;
         if (r < TYPICAL_MUTATION_THRESHOLD) {
-            mutatedGenes.push_back(s.Chromosome[i]);
-            mutatedGenesIndex.push_back(i);
+            int p = std::rand() % solutionLen;
+            std::swap(s.Chromosome[i], s.Chromosome[p]);
         }
-    }
-    std::random_shuffle(mutatedGenes.begin(), mutatedGenes.end());
-    for (int i = 0; i < mutatedGenesIndex.size(); ++i) {
-        s.Chromosome[mutatedGenesIndex[i]] = mutatedGenes[i];
     }
     Normalize(s);
     CALL_MEMBER_FN(*this, Evaluate)(s);
