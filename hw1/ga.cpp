@@ -445,9 +445,7 @@ void SteadyStateGA::Mutation1(Solution& s) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     std::swap(s.Chromosome[p], s.Chromosome[q]); // swap
-    if (p == 0 || q == 0) {
-        Normalize(s);
-    }
+    Normalize(s);
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
@@ -639,6 +637,9 @@ void SteadyStateGA::PrintAllSolutions() {
 }
 
 void SteadyStateGA::Normalize(Solution& s) {
+    if (s.Chromosome[0] == 0) {
+        return;
+    }
     std::copy(s.Chromosome.begin(), s.Chromosome.end(), tempSolution.Chromosome.begin());
     std::vector< int >::iterator zeroIter = std::find(tempSolution.Chromosome.begin(), tempSolution.Chromosome.end(), 0);
     std::copy(tempSolution.Chromosome.begin(), zeroIter, std::copy(zeroIter, tempSolution.Chromosome.end(), s.Chromosome.begin()));
