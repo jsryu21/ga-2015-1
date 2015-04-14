@@ -14,7 +14,7 @@
 
 const static int PSIZE = 100; // Size of the population
 const static int ROULETTE_SELECTION_PRESSURE_K = 3; // 3 ~ 4
-const static double TOURNAMENT_SELECTION_PRESSURE_T = 0.5;
+const static double TOURNAMENT_SELECTION_PRESSURE_T = 0.6;
 // http://www.complex-systems.com/pdf/09-3-2.pdf
 // http://en.wikipedia.org/wiki/Tournament_selection
 const static int GENERAL_TOURNAMENT_SELECTION_PRESSURE_K = 5;
@@ -557,8 +557,14 @@ void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const S
 
 // elitism
 void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr) {
-    std::sort(population.begin(), population.end());
-    population.back() = offspr;
+    double worstFitness = 0;
+    int worstIndex;
+    for (int i = 0; i < PSIZE; ++i) {
+        if (population[i].Fitness > worstFitness) {
+            worstIndex = i;
+        }
+    }
+    population[worstIndex] = offspr;
 }
 
 // preselection
@@ -624,19 +630,107 @@ void SteadyStateGA::Normalize(Solution& s) {
     std::copy(tempSolution.Chromosome.begin(), zeroIter, std::copy(zeroIter, tempSolution.Chromosome.end(), s.Chromosome.begin()));
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     // http://en.cppreference.com/w/cpp/numeric/random/rand
     std::srand(std::time(0));
     TestCase testCase;
     //testCase.PrintTestCase();
+    SteadyStateGA::EvaluateFn Evaluate = &SteadyStateGA::Evaluate1;
+    SteadyStateGA::GenerateRandomSolutionFn GenerateRandomSolution = &SteadyStateGA::GenerateRandomSolution1;
+    SteadyStateGA::PreprocessFn Preprocess = NULL;
+    SteadyStateGA::SelectionFn Selection = &SteadyStateGA::Selection1;
+    SteadyStateGA::CrossoverFn Crossover = &SteadyStateGA::Crossover1;
+    SteadyStateGA::MutationFn Mutation = &SteadyStateGA::Mutation1;
+    SteadyStateGA::ReplacementFn Replacement = &SteadyStateGA::Replacement1;
+    if (argc == 5) {
+        switch (*argv[1]) {
+            case '0':
+                Preprocess = NULL;
+                Selection = &SteadyStateGA::Selection1;
+                break;
+            case '1':
+                Preprocess = &SteadyStateGA::Preprocess1;
+                Selection = &SteadyStateGA::Selection2;
+                break;
+            case '2':
+                Preprocess = &SteadyStateGA::Preprocess2;
+                Selection = &SteadyStateGA::Selection2;
+                break;
+            case '3':
+                Preprocess = NULL;
+                Selection = &SteadyStateGA::Selection3;
+                break;
+            case '4':
+                Preprocess = NULL;
+                Selection = &SteadyStateGA::Selection4;
+                break;
+        }
+        switch (*argv[2]) {
+            case '0':
+                Crossover = &SteadyStateGA::Crossover1;
+                break;
+            case '1':
+                Crossover = &SteadyStateGA::Crossover2;
+                break;
+            case '2':
+                Crossover = &SteadyStateGA::Crossover3;
+                break;
+            case '3':
+                Crossover = &SteadyStateGA::Crossover4;
+                break;
+            case '4':
+                Crossover = &SteadyStateGA::Crossover5;
+                break;
+            case '5':
+                Crossover = &SteadyStateGA::Crossover6;
+                break;
+        }
+        switch (*argv[3]) {
+            case '0':
+                Mutation = &SteadyStateGA::Mutation1;
+                break;
+            case '1':
+                Mutation = &SteadyStateGA::Mutation2;
+                break;
+            case '2':
+                Mutation = &SteadyStateGA::Mutation3;
+                break;
+            case '3':
+                Mutation = &SteadyStateGA::Mutation4;
+                break;
+            case '4':
+                Mutation = &SteadyStateGA::Mutation5;
+                break;
+            case '5':
+                Mutation = &SteadyStateGA::Mutation6;
+                break;
+        }
+        switch (*argv[4]) {
+            case '0':
+                Replacement = &SteadyStateGA::Replacement1;
+                break;
+            case '1':
+                Replacement = &SteadyStateGA::Replacement2;
+                break;
+            case '2':
+                Replacement = &SteadyStateGA::Replacement3;
+                break;
+            case '3':
+                Replacement = &SteadyStateGA::Replacement4;
+                break;
+            case '4':
+                Replacement = &SteadyStateGA::Replacement5;
+                break;
+        }
+    }
     SteadyStateGA ga(testCase
-            , &SteadyStateGA::Evaluate1
-            , &SteadyStateGA::GenerateRandomSolution1
-            , NULL
-            , &SteadyStateGA::Selection1
-            , &SteadyStateGA::Crossover1
-            , &SteadyStateGA::Mutation1
-            , &SteadyStateGA::Replacement1);
+            , Evaluate
+            , GenerateRandomSolution
+            , Preprocess
+            , Selection
+            , Crossover
+            , Mutation
+            , Replacement);
     ga.GA();
     ga.Answer();
     //ga.PrintAllSolutions();
