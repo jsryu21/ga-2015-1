@@ -92,14 +92,11 @@ class SteadyStateGA {
         void Mutation4(Solution& s);
         void Mutation5(Solution& s);
         void Mutation6(Solution& s);
-        void Mutation7(Solution& s);
-        void Mutation8(Solution& s);
         void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr);
         void Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr);
-        void Replacement6(const Solution& p1, const Solution& p2, const Solution& offspr);
         void GA();
         void Answer();
         void PrintAllSolutions();
@@ -261,6 +258,15 @@ void SteadyStateGA::Selection4(Solution& p) {
 // and store the generated solution at c
 // currently the child will be same as p1
 void SteadyStateGA::Crossover1(const Solution& p1, const Solution& p2, Solution& c) {
+    if (std::rand() % 2 == 0) {
+        std::copy(p1.Chromosome.begin(), p1.Chromosome.end(), c.Chromosome.begin());
+    } else {
+        std::copy(p2.Chromosome.begin(), p2.Chromosome.end(), c.Chromosome.begin());
+    }
+    CALL_MEMBER_FN(*this, Evaluate)(c);
+}
+
+void SteadyStateGA::Crossover2(const Solution& p1, const Solution& p2, Solution& c) {
     int point = std::rand() % solutionLen;
     std::vector< int >::const_iterator pointIter = p1.Chromosome.begin() + point;
     std::copy(p1.Chromosome.begin(), pointIter, c.Chromosome.begin());
@@ -282,7 +288,7 @@ void SteadyStateGA::Crossover1(const Solution& p1, const Solution& p2, Solution&
 }
 
 // order crossover
-void SteadyStateGA::Crossover2(const Solution& p1, const Solution& p2, Solution& c) {
+void SteadyStateGA::Crossover3(const Solution& p1, const Solution& p2, Solution& c) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     while (p == q) {
@@ -328,7 +334,7 @@ void SteadyStateGA::Crossover2(const Solution& p1, const Solution& p2, Solution&
 }
 
 // cycle crossover
-void SteadyStateGA::Crossover3(const Solution& p1, const Solution& p2, Solution& c) {
+void SteadyStateGA::Crossover4(const Solution& p1, const Solution& p2, Solution& c) {
     int turn = 0;
     std::vector< bool > flags(solutionLen, false);
     std::vector< bool >::iterator iter = std::find(flags.begin(), flags.end(), false);
@@ -366,7 +372,7 @@ void SteadyStateGA::Crossover3(const Solution& p1, const Solution& p2, Solution&
 }
 
 // PMX : partially matched crossover
-void SteadyStateGA::Crossover4(const Solution& p1, const Solution& p2, Solution& c) {
+void SteadyStateGA::Crossover5(const Solution& p1, const Solution& p2, Solution& c) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     while (p == q) {
@@ -408,7 +414,7 @@ void SteadyStateGA::Crossover4(const Solution& p1, const Solution& p2, Solution&
 
 // edge recombination
 // http://www.rubicite.com/Tutorials/GeneticAlgorithms/CrossoverOperators/EdgeRecombinationCrossoverOperator.aspx
-void SteadyStateGA::Crossover5(const Solution& p1, const Solution& p2, Solution& c) {
+void SteadyStateGA::Crossover6(const Solution& p1, const Solution& p2, Solution& c) {
     std::vector< std::set< int > > neighborList(solutionLen);
     for (int i = 0; i < solutionLen; ++i) {
         neighborList[i].insert(p1.Chromosome[(i + solutionLen - 1) % solutionLen]);
@@ -443,12 +449,6 @@ void SteadyStateGA::Crossover5(const Solution& p1, const Solution& p2, Solution&
             }
         }
     }
-    Normalize(c);
-    CALL_MEMBER_FN(*this, Evaluate)(c);
-}
-
-// hybrid
-void SteadyStateGA::Crossover6(const Solution& p1, const Solution& p2, Solution& c) {
     Normalize(c);
     CALL_MEMBER_FN(*this, Evaluate)(c);
 }
@@ -530,18 +530,8 @@ void SteadyStateGA::Mutation5(Solution& s) {
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
-// hybrid - double bridge kick move : inversion = 1 : 9
-void SteadyStateGA::Mutation6(Solution& s) {
-    int r = std::rand() % 10;
-    if (r < 1) {
-        Mutation5(s);
-    } else {
-        Mutation4(s);
-    }
-}
-
 // or change
-void SteadyStateGA::Mutation7(Solution& s) {
+void SteadyStateGA::Mutation6(Solution& s) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     while (p == q) {
@@ -555,24 +545,6 @@ void SteadyStateGA::Mutation7(Solution& s) {
     s.Chromosome[q] = gene;
     Normalize(s);
     CALL_MEMBER_FN(*this, Evaluate)(s);
-}
-
-// fully hybrid
-void SteadyStateGA::Mutation8(Solution& s) {
-    int r = std::rand() % 6;
-    if (r == 0) {
-        Mutation1(s);
-    } else if (r == 1) {
-        Mutation2(s);
-    } else if (r == 2) {
-        Mutation3(s);
-    } else if (r == 3) {
-        Mutation4(s);
-    } else if (r == 4) {
-        Mutation5(s);
-    } else if (r == 5) {
-        Mutation7(s);
-    }
 }
 
 // replace one solution from the population with the new offspring
@@ -607,15 +579,6 @@ void SteadyStateGA::Replacement4(const Solution& p1, const Solution& p2, const S
 void SteadyStateGA::Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr) {
     if (offspr.Fitness < p1.Fitness || offspr.Fitness < p2.Fitness) {
         Replacement3(p1, p2, offspr);
-    }
-}
-
-void SteadyStateGA::Replacement6(const Solution& p1, const Solution& p2, const Solution& offspr) {
-    double r = static_cast< double >(std::rand()) / RAND_MAX;
-    if (r < HYBRID_REPLACEMENT_T) {
-        Replacement3(p1, p2, offspr);
-    } else {
-        Replacement2(p1, p2, offspr);
     }
 }
 
@@ -668,11 +631,11 @@ int main() {
     SteadyStateGA ga(testCase
             , &SteadyStateGA::Evaluate1
             , &SteadyStateGA::GenerateRandomSolution1
-            , &SteadyStateGA::Preprocess1
-            , &SteadyStateGA::Selection2
-            , &SteadyStateGA::Crossover5
-            , &SteadyStateGA::Mutation8
-            , &SteadyStateGA::Replacement6);
+            , NULL
+            , &SteadyStateGA::Selection1
+            , &SteadyStateGA::Crossover1
+            , &SteadyStateGA::Mutation1
+            , &SteadyStateGA::Replacement1);
     ga.GA();
     ga.Answer();
     //ga.PrintAllSolutions();
