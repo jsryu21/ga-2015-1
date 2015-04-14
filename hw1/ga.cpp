@@ -154,9 +154,11 @@ SteadyStateGA::SteadyStateGA(const TestCase& testCase
 // calculate the fitness of s and store it into s->f
 void SteadyStateGA::Evaluate1(Solution& s) {
     s.Fitness = 0;
-    for (int i = 0; i < solutionLen; ++i) {
-        s.Fitness += solutionDist[s.Chromosome[i]][s.Chromosome[(i + 1) % solutionLen]];
+    int end = solutionLen - 1;
+    for (int i = 0; i < end; ++i) {
+        s.Fitness += solutionDist[s.Chromosome[i]][s.Chromosome[i + 1]];
     }
+    s.Fitness += solutionDist[s.Chromosome[end]][s.Chromosome[0]];
     if (s.Fitness < record.Fitness) {
         record = s;
     }
@@ -164,10 +166,7 @@ void SteadyStateGA::Evaluate1(Solution& s) {
 
 // generate a random order-based solution at s
 void SteadyStateGA::GenerateRandomSolution1(Solution& s) {
-    for (int i = 0; i < solutionLen; ++i) {
-        int r = std::rand() % solutionLen;
-        std::swap(randomSolution.Chromosome[i], randomSolution.Chromosome[r]);
-    }
+    std::random_shuffle(randomSolution.Chromosome.begin(), randomSolution.Chromosome.end());
     std::vector< int >::iterator zeroIter = std::find(randomSolution.Chromosome.begin(), randomSolution.Chromosome.end(), 0);
     std::copy(randomSolution.Chromosome.begin(), zeroIter, std::copy(zeroIter, randomSolution.Chromosome.end(), s.Chromosome.begin()));
     // calculate the fitness
@@ -459,7 +458,9 @@ void SteadyStateGA::Mutation1(Solution& s) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     std::swap(s.Chromosome[p], s.Chromosome[q]); // swap
-    Normalize(s);
+    if (p == 0 || q == 0) {
+        Normalize(s);
+    }
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
