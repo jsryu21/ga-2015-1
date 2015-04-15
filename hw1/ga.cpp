@@ -6,7 +6,7 @@
 #include <limits>
 #include <algorithm>
 #include <iterator>
-#include <set>
+#include <numeric>
 #include "test_case.h"
 
 // https://isocpp.org/wiki/faq/pointers-to-members
@@ -128,6 +128,7 @@ class SteadyStateGA {
         double sumOfFitnesses;
         std::vector< bool > geneDupChecker;
         std::vector< int > corrGene;
+        std::vector< std::vector< int > > cityNeighbors;
 };
 
 SteadyStateGA::SteadyStateGA(const TestCase& testCase
@@ -151,6 +152,7 @@ SteadyStateGA::SteadyStateGA(const TestCase& testCase
     sumOfFitnesses(0),
     geneDupChecker(solutionLen),
     corrGene(solutionLen),
+    cityNeighbors(solutionLen, std::vector< int >(4, -1)),
     Evaluate(Evaluate_),
     GenerateRandomSolution(GenerateRandomSolution_),
     Preprocess(Preprocess_),
@@ -450,36 +452,99 @@ void SteadyStateGA::Crossover5(const Solution& p1, const Solution& p2, Solution&
 // edge recombination
 // http://www.rubicite.com/Tutorials/GeneticAlgorithms/CrossoverOperators/EdgeRecombinationCrossoverOperator.aspx
 void SteadyStateGA::Crossover6(const Solution& p1, const Solution& p2, Solution& c) {
-    std::vector< std::set< int > > neighborList(solutionLen);
-    for (int i = 0; i < solutionLen; ++i) {
-        neighborList[i].insert(p1.Chromosome[(i + solutionLen - 1) % solutionLen]);
-        neighborList[i].insert(p1.Chromosome[(i + 1) % solutionLen]);
-        neighborList[i].insert(p2.Chromosome[(i + solutionLen - 1) % solutionLen]);
-        neighborList[i].insert(p2.Chromosome[(i + 1) % solutionLen]);
+    int end = solutionLen - 1;
+    {
+        int p1Prev = p1.Chromosome[end];
+        int p1Next = p1.Chromosome[1];
+        int p2Prev = p2.Chromosome[end];
+        int p2Next = p2.Chromosome[1];
+        std::vector< int >& neighbors = cityNeighbors[0];
+        neighbors[0] = p1Prev;
+        neighbors[1] = p1Next;
+        if (p1Prev != p2Prev && p1Next != p2Prev) {
+            neighbors[2] = p2Prev;
+        } else {
+            neighbors[2] = -1;
+        }
+        if (p1Prev != p2Next && p1Next != p2Next && p2Prev != p2Next) {
+            neighbors[3] = p2Next;
+        } else {
+            neighbors[3] = -1;
+        }
     }
-    int city = 0;
+    for (int i = 1; i < end; ++i) {
+        int p1Prev = p1.Chromosome[i - 1];
+        int p1Next = p1.Chromosome[i + 1];
+        int p2Prev = p2.Chromosome[i - 1];
+        int p2Next = p2.Chromosome[i + 1];
+        std::vector< int >& neighbors = cityNeighbors[i];
+        neighbors[0] = p1Prev;
+        neighbors[1] = p1Next;
+        if (p1Prev != p2Prev && p1Next != p2Prev) {
+            neighbors[2] = p2Prev;
+        } else {
+            neighbors[2] = -1;
+        }
+        if (p1Prev != p2Next && p1Next != p2Next && p2Prev != p2Next) {
+            neighbors[3] = p2Next;
+        } else {
+            neighbors[3] = -1;
+        }
+    }
+    {
+        int p1Prev = p1.Chromosome[end - 1];
+        int p1Next = p1.Chromosome[0];
+        int p2Prev = p2.Chromosome[end - 1];
+        int p2Next = p2.Chromosome[0];
+        std::vector< int >& neighbors = cityNeighbors[end];
+        neighbors[0] = p1Prev;
+        neighbors[1] = p1Next;
+        if (p1Prev != p2Prev && p1Next != p2Prev) {
+            neighbors[2] = p2Prev;
+        } else {
+            neighbors[2] = -1;
+        }
+        if (p1Prev != p2Next && p1Next != p2Next && p2Prev != p2Next) {
+            neighbors[3] = p2Next;
+        } else {
+            neighbors[3] = -1;
+        }
+    }
+    std::fill(geneDupChecker.begin(), geneDupChecker.end(), false);
+    int nextCity = 0;
     int index = 0;
-    while (true) {
-        c.Chromosome[index++] = city;
-        if (index >= solutionLen) {
-            break;
-        }
+    while (index < solutionLen) {
+        c.Chromosome[index++] = nextCity;
+        geneDupChecker[nextCity] = true;
         for (int i = 0; i < solutionLen; ++i) {
-            neighborList[i].erase(city);
-        }
-        if (neighborList[city].size() == 0) {
-            // random node not already in CHILD
-            city = std::rand() % solutionLen;
-            while (std::find(c.Chromosome.begin(), c.Chromosome.begin() + index, city) != c.Chromosome.begin() + index) {
-                city = std::rand() % solutionLen;
+            std::vector< int >& neighbors = cityNeighbors[i];
+            for (int j = 0; j < 4; ++j) {
+                int& neighbor = neighbors[j];
+                if (neighbor == nextCity) {
+                    neighbor = -1;
+                }
             }
+        }
+        const std::vector< int >& neighbors = cityNeighbors[nextCity];
+        if (neighbors[0] == -1 && neighbors[1] == -1 && neighbors[2] == -1 && neighbors[3] == -1) {
+            // random node not already in CHILD
+            nextCity = std::distance(geneDupChecker.begin(), std::find(geneDupChecker.begin(), geneDupChecker.end(), false));
         } else {
             int fewest = 5;
-            std::set< int > neighbors = neighborList[city];
-            for (std::set< int >::iterator iter = neighbors.begin(); iter != neighbors.end(); ++iter) {
-                if (neighborList[*iter].size() < fewest) {
-                    city = *iter;
-                    fewest = neighborList[*iter].size();
+            for (int i = 0; i < 4; ++i) {
+                int neighbor = neighbors[i];
+                if (neighbor != -1) {
+                    const std::vector< int >& farNeighbors = cityNeighbors[neighbor];
+                    int count = 0;
+                    for (int j = 0; j < 4; ++j) {
+                        if (farNeighbors[j] != -1) {
+                            count++;
+                        }
+                    }
+                    if (count < fewest) {
+                        nextCity = neighbors[i];
+                        fewest = count;
+                    }
                 }
             }
         }

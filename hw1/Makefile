@@ -38,5 +38,5 @@ test: ga
 	./ga < cycle.in.51 > cycle.out.51
 
 p: ga
-	./ga 4 4 4 4 < cycle.in.11
+	./ga 5 5 5 5 < cycle.in.11
 	gprof ga gmon.out > ga_profile
