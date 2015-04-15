@@ -60,10 +60,10 @@ class SteadyStateGA {
         typedef void (SteadyStateGA::*EvaluateFn)(Solution& s);
         typedef void (SteadyStateGA::*GenerateRandomSolutionFn)(Solution& s);
         typedef void (SteadyStateGA::*PreprocessFn)();
-        typedef void (SteadyStateGA::*SelectionFn)(Solution& s);
+        typedef void (SteadyStateGA::*SelectionFn)(Solution& s, int& index);
         typedef void (SteadyStateGA::*CrossoverFn)(const Solution& p1, const Solution& p2, Solution& c);
         typedef void (SteadyStateGA::*MutationFn)(Solution& s);
-        typedef void (SteadyStateGA::*ReplacementFn)(const Solution& p1, const Solution& p2, const Solution& s);
+        typedef void (SteadyStateGA::*ReplacementFn)(const Solution& p1, const Solution& p2, const Solution& s, int p1Index, int p2Index);
         SteadyStateGA(const TestCase& testCase
                 , EvaluateFn Evaluate_
                 , GenerateRandomSolutionFn GenerateRandomSolution_
@@ -75,10 +75,10 @@ class SteadyStateGA {
         void Evaluate1(Solution& s);
         void GenerateRandomSolution1(Solution& s);
         void Preprocess1();
-        void Selection1(Solution& s);
-        void Selection2(Solution& s);
-        void Selection3(Solution& s);
-        void Selection4(Solution& s);
+        void Selection1(Solution& s, int& index);
+        void Selection2(Solution& s, int& index);
+        void Selection3(Solution& s, int& index);
+        void Selection4(Solution& s, int& index);
         void Crossover1(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover2(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover3(const Solution& p1, const Solution& p2, Solution& c);
@@ -91,11 +91,11 @@ class SteadyStateGA {
         void Mutation4(Solution& s);
         void Mutation5(Solution& s);
         void Mutation6(Solution& s);
-        void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr);
-        void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr);
-        void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr);
-        void Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr);
-        void Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr);
+        void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
+        void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
+        void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
+        void Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
+        void Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
         void GA();
         void Answer();
         void PrintAllSolutions();
@@ -196,53 +196,70 @@ void SteadyStateGA::Preprocess1() {
 
 // choose one solution from the population
 // currently this operator randomly chooses one w/ uniform Distribution
-void SteadyStateGA::Selection1(Solution& p) {
-    int r = std::rand() % PSIZE;
-    p = population[r];
+void SteadyStateGA::Selection1(Solution& p, int& index) {
+    index = std::rand() % PSIZE;
+    p = population[index];
 }
 
 // Roulette Wheel - Preprocess1
-void SteadyStateGA::Selection2(Solution& p) {
+void SteadyStateGA::Selection2(Solution& p, int& index) {
     double point = static_cast< double >(std::rand()) * sumOfFitnesses / RAND_MAX;
     std::vector< double >::iterator it = std::lower_bound(cumulativeFitnesses.begin(), cumulativeFitnesses.end(), point);
     if (it != cumulativeFitnesses.end()) {
-        p = population[std::distance(cumulativeFitnesses.begin(), it)];
+        index = std::distance(cumulativeFitnesses.begin(), it);
     } else {
         // http://valgrind.org/gallery/linux_mag.html
-        p = population[PSIZE - 1];
+        index = PSIZE - 1;
     }
+    p = population[index];
 }
 
 // Tournament
-void SteadyStateGA::Selection3(Solution& p) {
+void SteadyStateGA::Selection3(Solution& p, int& index) {
     int r1 = std::rand() % PSIZE;
     int r2 = std::rand() % PSIZE;
     const Solution& p1 = population[r1];
     const Solution& p2 = population[r2];
     double r = static_cast< double >(std::rand()) / RAND_MAX;
-    if (TOURNAMENT_SELECTION_PRESSURE_T > r) {
-        p = (p1.Fitness >= p2.Fitness) ? p1 : p2;
+    if (r < TOURNAMENT_SELECTION_PRESSURE_T) {
+        if (p1.Fitness < p2.Fitness) {
+            p = p1;
+            index = r1;
+        } else {
+            p = p2;
+            index = r1;
+        }
     } else {
-        p = (p1.Fitness >= p2.Fitness) ? p2 : p1;
+        if (p1.Fitness < p2.Fitness) {
+            p = p2;
+            index = r2;
+        } else {
+            p = p1;
+            index = r1;
+        }
     }
 }
 
 // General Tournament
-void SteadyStateGA::Selection4(Solution& p) {
-    std::vector< Solution > tournament;
+void SteadyStateGA::Selection4(Solution& p, int& index) {
+    std::vector< std::pair< Solution, int > > tournament;
     for (int i = 0; i < GENERAL_TOURNAMENT_SELECTION_PRESSURE_K; ++i) {
         int r = std::rand() % PSIZE;
-        tournament.push_back(population[r]);
+        tournament.push_back(std::make_pair(population[r], r));
     }
     std::sort(tournament.begin(), tournament.end());
     double r = static_cast< double >(std::rand()) / RAND_MAX;
     for (int i = 0; i < GENERAL_TOURNAMENT_SELECTION_PRESSURE_K; ++i) {
         if (TOURNAMENT_SELECTION_PRESSURE_T * std::pow((1 - TOURNAMENT_SELECTION_PRESSURE_T), i) < r) {
-            p = tournament[i];
+            const std::pair< Solution, int >& selected = tournament[i];
+            p = selected.first;
+            index = selected.second;
             return;
         }
     }
-    p = tournament[GENERAL_TOURNAMENT_SELECTION_PRESSURE_K - 1];
+    const std::pair< Solution, int >& selected = tournament[GENERAL_TOURNAMENT_SELECTION_PRESSURE_K - 1];
+    p = selected.first;
+    index = selected.second;
 }
 
 // combine the given parents p1 and p2
@@ -550,7 +567,7 @@ void SteadyStateGA::Mutation6(Solution& s) {
 
 // replace one solution from the population with the new offspring
 // currently any random solution can be replaced
-void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr) {
+void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
     int p = std::rand() % PSIZE;
 
     if (Preprocess == &SteadyStateGA::Preprocess1) {
@@ -562,7 +579,7 @@ void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const S
 }
 
 // elitism
-void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr) {
+void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
     if (Preprocess == &SteadyStateGA::Preprocess1) {
         UpdateAdditoryFitnesses(worstIndex, offspr);
     }
@@ -572,31 +589,35 @@ void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const S
 }
 
 // preselection
-void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr) {
-    std::vector< Solution >::iterator iter = std::find(population.begin(), population.end(), (p1.Fitness > p2.Fitness) ? p1 : p2);
-    if (iter != population.end()) {
-        int index = std::distance(population.begin(), iter);
-
+void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
+    if (p1.Fitness < p2.Fitness) {
         if (Preprocess == &SteadyStateGA::Preprocess1) {
-            UpdateAdditoryFitnesses(index, offspr);
+            UpdateAdditoryFitnesses(p2Index, offspr);
         }
 
-        UpdateRecords(index, offspr);
-        *iter = offspr;
-    }
-}
-
-void SteadyStateGA::Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr) {
-    if (offspr.Fitness < p1.Fitness || offspr.Fitness < p2.Fitness) {
-        Replacement3(p1, p2, offspr);
+        UpdateRecords(p2Index, offspr);
+        population[p2Index] = offspr;
     } else {
-        Replacement2(p1, p2, offspr);
+        if (Preprocess == &SteadyStateGA::Preprocess1) {
+            UpdateAdditoryFitnesses(p1Index, offspr);
+        }
+
+        UpdateRecords(p1Index, offspr);
+        population[p1Index] = offspr;
     }
 }
 
-void SteadyStateGA::Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr) {
+void SteadyStateGA::Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
     if (offspr.Fitness < p1.Fitness || offspr.Fitness < p2.Fitness) {
-        Replacement3(p1, p2, offspr);
+        Replacement3(p1, p2, offspr, p1Index, p2Index);
+    } else {
+        Replacement2(p1, p2, offspr, p1Index, p2Index);
+    }
+}
+
+void SteadyStateGA::Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
+    if (offspr.Fitness < p1.Fitness || offspr.Fitness < p2.Fitness) {
+        Replacement3(p1, p2, offspr, p1Index, p2Index);
     }
 }
 
@@ -617,11 +638,13 @@ void SteadyStateGA::GA() {
         Solution p1(solutionLen);
         Solution p2(solutionLen);
         Solution c(solutionLen);
-        CALL_MEMBER_FN(*this, Selection)(p1);
-        CALL_MEMBER_FN(*this, Selection)(p2);
+        int p1Index;
+        int p2Index;
+        CALL_MEMBER_FN(*this, Selection)(p1, p1Index);
+        CALL_MEMBER_FN(*this, Selection)(p2, p2Index);
         CALL_MEMBER_FN(*this, Crossover)(p1, p2, c);
         CALL_MEMBER_FN(*this, Mutation)(c);
-        CALL_MEMBER_FN(*this, Replacement)(p1, p2, c);
+        CALL_MEMBER_FN(*this, Replacement)(p1, p2, c, p1Index, p2Index);
     }
 }
 
