@@ -125,6 +125,7 @@ class SteadyStateGA {
         std::vector< double > adjustedFitnesses;
         std::vector< double > cumulativeFitnesses;
         double sumOfFitnesses;
+        std::vector< bool > geneDupChecker;
 };
 
 SteadyStateGA::SteadyStateGA(const TestCase& testCase
@@ -146,6 +147,7 @@ SteadyStateGA::SteadyStateGA(const TestCase& testCase
     adjustedFitnesses(PSIZE),
     cumulativeFitnesses(PSIZE),
     sumOfFitnesses(0),
+    geneDupChecker(solutionLen),
     Evaluate(Evaluate_),
     GenerateRandomSolution(GenerateRandomSolution_),
     Preprocess(Preprocess_),
@@ -305,13 +307,16 @@ void SteadyStateGA::Crossover3(const Solution& p1, const Solution& p2, Solution&
     std::vector< int >::const_iterator pIter = p1.Chromosome.begin() + p;
     std::vector< int >::const_iterator qIter = p1.Chromosome.begin() + q;
     std::copy(pIter, qIter, c.Chromosome.begin() + p);
+    for (int i = 0; i < solutionLen; ++i) {
+        geneDupChecker[i] = false;
+    }
+    for (std::vector< int >::const_iterator it = pIter; it != qIter; ++it) {
+        geneDupChecker[*it] = true;
+    }
     int index = 0;
     for (int i = q; i < solutionLen; ++i) {
-        if (std::find(pIter, qIter, p2.Chromosome[i]) == qIter) {
-            if (index < p) {
-                c.Chromosome[index] = p2.Chromosome[i];
-                index++;
-            } else if (index < q) {
+        if (geneDupChecker[p2.Chromosome[i]] == false) {
+            if (p <= index && index < q) {
                 c.Chromosome[q] = p2.Chromosome[i];
                 index = q + 1;
             } else {
@@ -321,11 +326,8 @@ void SteadyStateGA::Crossover3(const Solution& p1, const Solution& p2, Solution&
         }
     }
     for (int i = 0; i < q; ++i) {
-        if (std::find(pIter, qIter, p2.Chromosome[i]) == qIter) {
-            if (index < p) {
-                c.Chromosome[index] = p2.Chromosome[i];
-                index++;
-            } else if (index < q) {
+        if (geneDupChecker[p2.Chromosome[i]] == false) {
+            if (p <= index && index < q) {
                 c.Chromosome[q] = p2.Chromosome[i];
                 index = q + 1;
             } else {
