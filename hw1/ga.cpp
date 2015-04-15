@@ -324,9 +324,7 @@ void SteadyStateGA::Crossover3(const Solution& p1, const Solution& p2, Solution&
     std::vector< int >::const_iterator pIter = p1.Chromosome.begin() + p;
     std::vector< int >::const_iterator qIter = p1.Chromosome.begin() + q;
     std::copy(pIter, qIter, c.Chromosome.begin() + p);
-    for (int i = 0; i < solutionLen; ++i) {
-        geneDupChecker[i] = false;
-    }
+    std::fill(geneDupChecker.begin(), geneDupChecker.end(), false);
     for (std::vector< int >::const_iterator it = pIter; it != qIter; ++it) {
         geneDupChecker[*it] = true;
     }
@@ -359,37 +357,35 @@ void SteadyStateGA::Crossover3(const Solution& p1, const Solution& p2, Solution&
 
 // cycle crossover
 void SteadyStateGA::Crossover4(const Solution& p1, const Solution& p2, Solution& c) {
-    int turn = 0;
-    std::vector< bool > flags(solutionLen, false);
-    std::vector< bool >::iterator iter = std::find(flags.begin(), flags.end(), false);
-    while (iter != flags.end()) {
-        if (turn == 0) {
-            int index = std::distance(flags.begin(), iter);
-            int p1Gene = p1.Chromosome[index];
-            int p2Gene = p2.Chromosome[index];
-            c.Chromosome[index] = p1.Chromosome[index];
-            flags[index] = true;
+    bool turn = true;
+    std::fill(geneDupChecker.begin(), geneDupChecker.end(), false);
+    std::vector< bool >::iterator it = geneDupChecker.begin();
+    while (it != geneDupChecker.end()) {
+        int index = std::distance(geneDupChecker.begin(), it);
+        int p1Gene = p1.Chromosome[index];
+        int p2Gene = p2.Chromosome[index];
+        if (turn) {
+            c.Chromosome[index] = p1Gene;
+            geneDupChecker[index] = true;
             while (p1Gene != p2Gene) {
                 index = std::distance(p1.Chromosome.begin(), std::find(p1.Chromosome.begin(), p1.Chromosome.end(), p2Gene));
                 c.Chromosome[index] = p1.Chromosome[index];
                 p2Gene = p2.Chromosome[index];
-                flags[index] = true;
+                geneDupChecker[index] = true;
             }
-            iter = std::find(flags.begin(), flags.end(), false);
+            turn = false;
         } else {
-            int index = std::distance(flags.begin(), iter);
-            int p2Gene = p2.Chromosome[index];
-            int p1Gene = p1.Chromosome[index];
-            c.Chromosome[index] = p2.Chromosome[index];
-            flags[index] = true;
+            c.Chromosome[index] = p2Gene;
+            geneDupChecker[index] = true;
             while (p2Gene != p1Gene) {
                 index = std::distance(p2.Chromosome.begin(), std::find(p2.Chromosome.begin(), p2.Chromosome.end(), p1Gene));
                 c.Chromosome[index] = p2.Chromosome[index];
                 p1Gene = p1.Chromosome[index];
-                flags[index] = true;
+                geneDupChecker[index] = true;
             }
-            iter = std::find(flags.begin(), flags.end(), false);
+            turn = true;
         }
+        it = std::find(it, geneDupChecker.end(), false);
     }
     Normalize(c);
     CALL_MEMBER_FN(*this, Evaluate)(c);
