@@ -127,6 +127,7 @@ class SteadyStateGA {
         std::vector< double > cumulativeFitnesses;
         double sumOfFitnesses;
         std::vector< bool > geneDupChecker;
+        std::vector< int > corrGene;
 };
 
 SteadyStateGA::SteadyStateGA(const TestCase& testCase
@@ -149,6 +150,7 @@ SteadyStateGA::SteadyStateGA(const TestCase& testCase
     cumulativeFitnesses(PSIZE),
     sumOfFitnesses(0),
     geneDupChecker(solutionLen),
+    corrGene(solutionLen),
     Evaluate(Evaluate_),
     GenerateRandomSolution(GenerateRandomSolution_),
     Preprocess(Preprocess_),
@@ -422,25 +424,24 @@ void SteadyStateGA::Crossover5(const Solution& p1, const Solution& p2, Solution&
     std::vector< int >::iterator cIter = std::copy(p2.Chromosome.begin(), p2PIter, c.Chromosome.begin());
     cIter = std::copy(p1PIter, p1QIter, cIter);
     std::copy(p2QIter, p2.Chromosome.end(), cIter);
-    for (int i = 0; i < p; ++i) {
-        int cGene = c.Chromosome[i];
+    std::fill(geneDupChecker.begin(), geneDupChecker.end(), false);
+    for (int i = p; i < q; ++i) {
+        int p1Gene = p1.Chromosome[i];
         int p2Gene = p2.Chromosome[i];
-        std::vector< int >::const_iterator p1Iter = std::find(p1PIter, p1QIter, cGene);
-        while (p1Iter != p1QIter) {
-            p2Gene = p2.Chromosome[std::distance(p1.Chromosome.begin(), p1Iter)];
-            p1Iter = std::find(p1PIter, p1QIter, p2Gene);
+        geneDupChecker[p1Gene] = true;
+        corrGene[p1Gene] = p2Gene;
+    }
+    for (int i = 0; i < p; ++i) {
+        int& cGene = c.Chromosome[i];
+        while (geneDupChecker[cGene]) {
+            cGene = corrGene[cGene];
         }
-        c.Chromosome[i] = p2Gene;
     }
     for (int i = q; i < solutionLen; ++i) {
-        int cGene = c.Chromosome[i];
-        int p2Gene = p2.Chromosome[i];
-        std::vector< int >::const_iterator p1Iter = std::find(p1PIter, p1QIter, cGene);
-        while (p1Iter != p1QIter) {
-            p2Gene = p2.Chromosome[std::distance(p1.Chromosome.begin(), p1Iter)];
-            p1Iter = std::find(p1PIter, p1QIter, p2Gene);
+        int& cGene = c.Chromosome[i];
+        while (geneDupChecker[cGene]) {
+            cGene = corrGene[cGene];
         }
-        c.Chromosome[i] = p2Gene;
     }
     Normalize(c);
     CALL_MEMBER_FN(*this, Evaluate)(c);
