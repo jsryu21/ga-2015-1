@@ -108,6 +108,9 @@ class SteadyStateGA {
         MutationFn Mutation;
         ReplacementFn Replacement;
         void Normalize(Solution& s);
+        void InitRecords();
+        void UpdateAdditoryFitnesses(int index, const Solution& s);
+        void UpdateRecords(int index, const Solution& s);
 
         int solutionLen;
         const std::vector< std::vector< double > >& solutionDist;
@@ -116,6 +119,7 @@ class SteadyStateGA {
         std::vector< Solution > population;
         Solution record;
         double maxFitness;
+        int worstIndex;
         Solution randomSolution;
         Solution tempSolution;
         std::vector< double > adjustedFitnesses;
@@ -136,6 +140,7 @@ SteadyStateGA::SteadyStateGA(const TestCase& testCase
     population(PSIZE, Solution(solutionLen)),
     record(solutionLen),
     maxFitness(0),
+    worstIndex(0),
     randomSolution(solutionLen),
     tempSolution(solutionLen),
     adjustedFitnesses(PSIZE),
@@ -162,11 +167,6 @@ void SteadyStateGA::Evaluate1(Solution& s) {
         s.Fitness += solutionDist[s.Chromosome[i]][s.Chromosome[i + 1]];
     }
     s.Fitness += solutionDist[s.Chromosome[end]][s.Chromosome[0]];
-    if (s.Fitness < record.Fitness) {
-        record = s;
-    } else if (s.Fitness > maxFitness) {
-        maxFitness = s.Fitness;
-    }
 }
 
 // generate a random order-based solution at s
@@ -552,44 +552,20 @@ void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const S
     int p = std::rand() % PSIZE;
 
     if (Preprocess == &SteadyStateGA::Preprocess1) {
-        sumOfFitnesses -= adjustedFitnesses[p];
-        double offset = maxFitness + (maxFitness - record.Fitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
-        double adjustedFitness = offset - offspr.Fitness;
-        sumOfFitnesses += adjustedFitness;
-        adjustedFitnesses[p] = adjustedFitness;
-        if (p == 0) {
-            cumulativeFitnesses[0] = adjustedFitnesses[0];
-        } else {
-            cumulativeFitnesses[p] = cumulativeFitnesses[p - 1] + adjustedFitnesses[p];
-        }
+        UpdateAdditoryFitnesses(p, offspr);
     }
 
+    UpdateRecords(p, offspr);
     population[p] = offspr;
 }
 
 // elitism
 void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr) {
-    double worstFitness = 0;
-    int worstIndex;
-    for (int i = 0; i < PSIZE; ++i) {
-        if (population[i].Fitness > worstFitness) {
-            worstIndex = i;
-        }
-    }
-
     if (Preprocess == &SteadyStateGA::Preprocess1) {
-        sumOfFitnesses -= adjustedFitnesses[worstIndex];
-        double offset = maxFitness + (maxFitness - record.Fitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
-        double adjustedFitness = offset - offspr.Fitness;
-        sumOfFitnesses += adjustedFitness;
-        adjustedFitnesses[worstIndex] = adjustedFitness;
-        if (worstIndex == 0) {
-            cumulativeFitnesses[0] = adjustedFitnesses[0];
-        } else {
-            cumulativeFitnesses[worstIndex] = cumulativeFitnesses[worstIndex - 1] + adjustedFitnesses[worstIndex];
-        }
+        UpdateAdditoryFitnesses(worstIndex, offspr);
     }
 
+    UpdateRecords(worstIndex, offspr);
     population[worstIndex] = offspr;
 }
 
@@ -597,20 +573,13 @@ void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const S
 void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr) {
     std::vector< Solution >::iterator iter = std::find(population.begin(), population.end(), (p1.Fitness > p2.Fitness) ? p1 : p2);
     if (iter != population.end()) {
+        int index = std::distance(population.begin(), iter);
+
         if (Preprocess == &SteadyStateGA::Preprocess1) {
-            int index = std::distance(population.begin(), iter);
-            sumOfFitnesses -= adjustedFitnesses[index];
-            double offset = maxFitness + (maxFitness - record.Fitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
-            double adjustedFitness = offset - offspr.Fitness;
-            sumOfFitnesses += adjustedFitness;
-            adjustedFitnesses[index] = adjustedFitness;
-            if (index == 0) {
-                cumulativeFitnesses[0] = adjustedFitnesses[0];
-            } else {
-                cumulativeFitnesses[index] = cumulativeFitnesses[index - 1] + adjustedFitnesses[index];
-            }
+            UpdateAdditoryFitnesses(index, offspr);
         }
 
+        UpdateRecords(index, offspr);
         *iter = offspr;
     }
 }
@@ -635,6 +604,7 @@ void SteadyStateGA::GA() {
     for (int i = 0; i < PSIZE; ++i) {
         CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
     }
+    InitRecords();
     if (Preprocess) {
         CALL_MEMBER_FN(*this, Preprocess)();
     }
@@ -671,6 +641,39 @@ void SteadyStateGA::Normalize(Solution& s) {
     std::copy(s.Chromosome.begin(), s.Chromosome.end(), tempSolution.Chromosome.begin());
     std::vector< int >::iterator zeroIter = std::find(tempSolution.Chromosome.begin(), tempSolution.Chromosome.end(), 0);
     std::copy(tempSolution.Chromosome.begin(), zeroIter, std::copy(zeroIter, tempSolution.Chromosome.end(), s.Chromosome.begin()));
+}
+
+void SteadyStateGA::InitRecords() {
+    for (int i = 0; i < PSIZE; ++i) {
+        if (population[i].Fitness < record.Fitness) {
+            record = population[i];
+        } else if (population[i].Fitness > maxFitness) {
+            maxFitness = population[i].Fitness;
+            worstIndex = i;
+        }
+    }
+}
+
+void SteadyStateGA::UpdateAdditoryFitnesses(int index, const Solution& s) {
+    sumOfFitnesses -= adjustedFitnesses[index];
+    double offset = maxFitness + (maxFitness - record.Fitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
+    double adjustedFitness = offset - s.Fitness;
+    sumOfFitnesses += adjustedFitness;
+    adjustedFitnesses[index] = adjustedFitness;
+    if (index == 0) {
+        cumulativeFitnesses[0] = adjustedFitnesses[0];
+    } else {
+        cumulativeFitnesses[index] = cumulativeFitnesses[index - 1] + adjustedFitnesses[index];
+    }
+}
+
+void SteadyStateGA::UpdateRecords(int index, const Solution& s) {
+    if (s.Fitness < record.Fitness) {
+        record = s;
+    } else if (s.Fitness > maxFitness) {
+        maxFitness = s.Fitness;
+        worstIndex = index;
+    }
 }
 
 int main(int argc, char* argv[]) {
