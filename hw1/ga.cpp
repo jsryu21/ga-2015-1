@@ -18,6 +18,7 @@ const static double TOURNAMENT_SELECTION_PRESSURE_T = 0.6;
 // http://www.complex-systems.com/pdf/09-3-2.pdf
 // http://en.wikipedia.org/wiki/Tournament_selection
 const static int GENERAL_TOURNAMENT_SELECTION_PRESSURE_K = 5;
+const static int GENERAL_TOURNAMENT_SELECTION_PRESSURE_T = TOURNAMENT_SELECTION_PRESSURE_T + TOURNAMENT_SELECTION_PRESSURE_T * (1 - TOURNAMENT_SELECTION_PRESSURE_T);
 const static double RANK_SELECTION_PRESSURE_MAX = 3;
 const static double RANK_SELECTION_PRESSURE_MIN = 1;
 const static double HYBRID_REPLACEMENT_T = 0.8;
@@ -242,24 +243,37 @@ void SteadyStateGA::Selection3(Solution& p, int& index) {
 
 // General Tournament
 void SteadyStateGA::Selection4(Solution& p, int& index) {
-    std::vector< std::pair< Solution, int > > tournament;
+    double largestFitness = 0;
+    double secLargestFitness = 0;
+    int largestIndex = 0;
+    int secLargestIndex = 0;
+    int remainIndex = 0;
     for (int i = 0; i < GENERAL_TOURNAMENT_SELECTION_PRESSURE_K; ++i) {
         int r = std::rand() % PSIZE;
-        tournament.push_back(std::make_pair(population[r], r));
-    }
-    std::sort(tournament.begin(), tournament.end());
-    double r = static_cast< double >(std::rand()) / RAND_MAX;
-    for (int i = 0; i < GENERAL_TOURNAMENT_SELECTION_PRESSURE_K; ++i) {
-        if (TOURNAMENT_SELECTION_PRESSURE_T * std::pow((1 - TOURNAMENT_SELECTION_PRESSURE_T), i) < r) {
-            const std::pair< Solution, int >& selected = tournament[i];
-            p = selected.first;
-            index = selected.second;
-            return;
+        double fitness = population[r].Fitness;
+        if (fitness > largestFitness) {
+            secLargestFitness = largestFitness;
+            largestFitness = fitness;
+            secLargestIndex = largestIndex;
+            largestIndex = r;
+        } else if (fitness > secLargestFitness) {
+            secLargestFitness = fitness;
+            secLargestIndex = r;
+        } else {
+            remainIndex = r;
         }
     }
-    const std::pair< Solution, int >& selected = tournament[GENERAL_TOURNAMENT_SELECTION_PRESSURE_K - 1];
-    p = selected.first;
-    index = selected.second;
+    double r = static_cast< double >(std::rand()) / RAND_MAX;
+    if (r < TOURNAMENT_SELECTION_PRESSURE_T) {
+        p = population[largestIndex];
+        index = largestIndex;
+    } else if (r < GENERAL_TOURNAMENT_SELECTION_PRESSURE_T) {
+        p = population[secLargestIndex];
+        index = secLargestIndex;
+    } else {
+        p = population[remainIndex];
+        index = remainIndex;
+    }
 }
 
 // combine the given parents p1 and p2

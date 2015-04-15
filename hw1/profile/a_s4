@@ -1,0 +1,245 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  us/call  us/call  name    
+ 22.90      0.38     0.38  2925954     0.13     0.38  SteadyStateGA::Selection4(Solution&, int&)
+ 17.47      0.67     0.29  1462977     0.20     0.33  SteadyStateGA::Crossover4(Solution const&, Solution const&, Solution&)
+ 16.87      0.95     0.28 11703816     0.02     0.02  std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > >::_M_insert_aux(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, std::pair<Solution, int> const&)
+ 13.26      1.17     0.22  2925954     0.08     0.14  void std::__insertion_sort<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > > >(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, __gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >)
+  9.94      1.34     0.17 13765091     0.01     0.01  std::_Bit_iterator std::__find<std::_Bit_iterator, bool>(std::_Bit_iterator, std::_Bit_iterator, bool const&, std::random_access_iterator_tag)
+  8.13      1.47     0.14  8006309     0.02     0.02  void std::__unguarded_linear_insert<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > > >(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >)
+  4.82      1.55     0.08 16091422     0.00     0.00  std::vector<int, std::allocator<int> >::operator=(std::vector<int, std::allocator<int> > const&)
+  2.41      1.59     0.04  2926054     0.01     0.01  SteadyStateGA::Evaluate1(Solution&)
+  1.21      1.61     0.02                             SteadyStateGA::GA()
+  0.60      1.62     0.01  2925954     0.00     0.01  SteadyStateGA::Normalize(Solution&)
+  0.60      1.63     0.01  2925954     0.00     0.00  void std::__introsort_loop<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, long>(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, __gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, long)
+  0.60      1.64     0.01   218095     0.05     0.05  __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > > std::__find<__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int const&, std::random_access_iterator_tag)
+  0.60      1.65     0.01      100   100.02   100.08  SteadyStateGA::GenerateRandomSolution1(Solution&)
+  0.30      1.66     0.01  2327656     0.00     0.00  __gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > > std::__find<__gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > >, int>(__gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > >, int const&, std::random_access_iterator_tag)
+  0.30      1.66     0.01                             std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::_M_copy(std::_Rb_tree_node<int> const*, std::_Rb_tree_node<int>*)
+  0.00      1.66     0.00  1462977     0.00     0.00  SteadyStateGA::Replacement4(Solution const&, Solution const&, Solution const&, int, int)
+  0.00      1.66     0.00  1462977     0.00     0.01  SteadyStateGA::Mutation4(Solution&)
+  0.00      1.66     0.00        1     0.00     0.00  _GLOBAL__sub_I__ZN8SolutionC2Ei
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+ 
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this 
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+Copyright (C) 2012 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 2 byte(s) for 0.60% of 1.66 seconds
+
+index % time    self  children    called     name
+                                                 <spontaneous>
+[1]     99.7    0.02    1.64                 SteadyStateGA::GA() [1]
+                0.38    0.72 2925954/2925954     SteadyStateGA::Selection4(Solution&, int&) [2]
+                0.29    0.20 1462977/1462977     SteadyStateGA::Crossover4(Solution const&, Solution const&, Solution&) [3]
+                0.02    0.00 1462977/2926054     SteadyStateGA::Evaluate1(Solution&) [9]
+                0.01    0.00     100/100         SteadyStateGA::GenerateRandomSolution1(Solution&) [11]
+                0.00    0.01 1462977/1462977     SteadyStateGA::Mutation4(Solution&) [14]
+                0.00    0.01 1462977/1462977     SteadyStateGA::Replacement4(Solution const&, Solution const&, Solution const&, int, int) [15]
+                0.00    0.00       7/16091422     std::vector<int, std::allocator<int> >::operator=(std::vector<int, std::allocator<int> > const&) [8]
+-----------------------------------------------
+                0.38    0.72 2925954/2925954     SteadyStateGA::GA() [1]
+[2]     66.1    0.38    0.72 2925954         SteadyStateGA::Selection4(Solution&, int&) [2]
+                0.22    0.19 2925954/2925954     void std::__insertion_sort<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > > >(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, __gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >) [4]
+                0.28    0.00 11703816/11703816     std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > >::_M_insert_aux(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, std::pair<Solution, int> const&) [5]
+                0.01    0.00 2925954/16091422     std::vector<int, std::allocator<int> >::operator=(std::vector<int, std::allocator<int> > const&) [8]
+                0.01    0.00 2925954/2925954     void std::__introsort_loop<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, long>(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, __gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, long) [12]
+-----------------------------------------------
+                0.29    0.20 1462977/1462977     SteadyStateGA::GA() [1]
+[3]     29.5    0.29    0.20 1462977         SteadyStateGA::Crossover4(Solution const&, Solution const&, Solution&) [3]
+                0.17    0.00 13765091/13765091     std::_Bit_iterator std::__find<std::_Bit_iterator, bool>(std::_Bit_iterator, std::_Bit_iterator, bool const&, std::random_access_iterator_tag) [7]
+                0.02    0.00 1462977/2926054     SteadyStateGA::Evaluate1(Solution&) [9]
+                0.01    0.00 1462977/2925954     SteadyStateGA::Normalize(Solution&) [10]
+                0.01    0.00 2327656/2327656     __gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > > std::__find<__gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > >, int>(__gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > >, int const&, std::random_access_iterator_tag) [16]
+-----------------------------------------------
+                0.22    0.19 2925954/2925954     SteadyStateGA::Selection4(Solution&, int&) [2]
+[4]     24.9    0.22    0.19 2925954         void std::__insertion_sort<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > > >(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, __gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >) [4]
+                0.14    0.04 8006309/8006309     void std::__unguarded_linear_insert<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > > >(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >) [6]
+                0.02    0.00 3697507/16091422     std::vector<int, std::allocator<int> >::operator=(std::vector<int, std::allocator<int> > const&) [8]
+-----------------------------------------------
+                0.28    0.00 11703816/11703816     SteadyStateGA::Selection4(Solution&, int&) [2]
+[5]     16.9    0.28    0.00 11703816         std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > >::_M_insert_aux(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, std::pair<Solution, int> const&) [5]
+-----------------------------------------------
+                0.14    0.04 8006309/8006309     void std::__insertion_sort<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > > >(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, __gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >) [4]
+[6]     10.5    0.14    0.04 8006309         void std::__unguarded_linear_insert<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > > >(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >) [6]
+                0.04    0.00 8006309/16091422     std::vector<int, std::allocator<int> >::operator=(std::vector<int, std::allocator<int> > const&) [8]
+-----------------------------------------------
+                0.17    0.00 13765091/13765091     SteadyStateGA::Crossover4(Solution const&, Solution const&, Solution&) [3]
+[7]      9.9    0.17    0.00 13765091         std::_Bit_iterator std::__find<std::_Bit_iterator, bool>(std::_Bit_iterator, std::_Bit_iterator, bool const&, std::random_access_iterator_tag) [7]
+-----------------------------------------------
+                0.00    0.00       7/16091422     SteadyStateGA::GA() [1]
+                0.01    0.00 1461645/16091422     SteadyStateGA::Replacement4(Solution const&, Solution const&, Solution const&, int, int) [15]
+                0.01    0.00 2925954/16091422     SteadyStateGA::Selection4(Solution&, int&) [2]
+                0.02    0.00 3697507/16091422     void std::__insertion_sort<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > > >(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, __gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >) [4]
+                0.04    0.00 8006309/16091422     void std::__unguarded_linear_insert<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > > >(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >) [6]
+[8]      4.8    0.08    0.00 16091422         std::vector<int, std::allocator<int> >::operator=(std::vector<int, std::allocator<int> > const&) [8]
+-----------------------------------------------
+                0.00    0.00     100/2926054     SteadyStateGA::GenerateRandomSolution1(Solution&) [11]
+                0.02    0.00 1462977/2926054     SteadyStateGA::GA() [1]
+                0.02    0.00 1462977/2926054     SteadyStateGA::Crossover4(Solution const&, Solution const&, Solution&) [3]
+[9]      2.4    0.04    0.00 2926054         SteadyStateGA::Evaluate1(Solution&) [9]
+-----------------------------------------------
+                0.01    0.00 1462977/2925954     SteadyStateGA::Mutation4(Solution&) [14]
+                0.01    0.00 1462977/2925954     SteadyStateGA::Crossover4(Solution const&, Solution const&, Solution&) [3]
+[10]     1.2    0.01    0.01 2925954         SteadyStateGA::Normalize(Solution&) [10]
+                0.01    0.00  217995/218095      __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > > std::__find<__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int const&, std::random_access_iterator_tag) [13]
+-----------------------------------------------
+                0.01    0.00     100/100         SteadyStateGA::GA() [1]
+[11]     0.6    0.01    0.00     100         SteadyStateGA::GenerateRandomSolution1(Solution&) [11]
+                0.00    0.00     100/218095      __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > > std::__find<__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int const&, std::random_access_iterator_tag) [13]
+                0.00    0.00     100/2926054     SteadyStateGA::Evaluate1(Solution&) [9]
+-----------------------------------------------
+                0.01    0.00 2925954/2925954     SteadyStateGA::Selection4(Solution&, int&) [2]
+[12]     0.6    0.01    0.00 2925954         void std::__introsort_loop<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, long>(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, __gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, long) [12]
+-----------------------------------------------
+                0.00    0.00     100/218095      SteadyStateGA::GenerateRandomSolution1(Solution&) [11]
+                0.01    0.00  217995/218095      SteadyStateGA::Normalize(Solution&) [10]
+[13]     0.6    0.01    0.00  218095         __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > > std::__find<__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int const&, std::random_access_iterator_tag) [13]
+-----------------------------------------------
+                0.00    0.01 1462977/1462977     SteadyStateGA::GA() [1]
+[14]     0.6    0.00    0.01 1462977         SteadyStateGA::Mutation4(Solution&) [14]
+                0.01    0.00 1462977/2925954     SteadyStateGA::Normalize(Solution&) [10]
+-----------------------------------------------
+                0.00    0.01 1462977/1462977     SteadyStateGA::GA() [1]
+[15]     0.4    0.00    0.01 1462977         SteadyStateGA::Replacement4(Solution const&, Solution const&, Solution const&, int, int) [15]
+                0.01    0.00 1461645/16091422     std::vector<int, std::allocator<int> >::operator=(std::vector<int, std::allocator<int> > const&) [8]
+-----------------------------------------------
+                0.01    0.00 2327656/2327656     SteadyStateGA::Crossover4(Solution const&, Solution const&, Solution&) [3]
+[16]     0.3    0.01    0.00 2327656         __gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > > std::__find<__gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > >, int>(__gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > >, int const&, std::random_access_iterator_tag) [16]
+-----------------------------------------------
+                                                 <spontaneous>
+[17]     0.3    0.01    0.00                 std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::_M_copy(std::_Rb_tree_node<int> const*, std::_Rb_tree_node<int>*) [17]
+-----------------------------------------------
+                0.00    0.00       1/1           __libc_csu_init [218]
+[25]     0.0    0.00    0.00       1         _GLOBAL__sub_I__ZN8SolutionC2Ei [25]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function is in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+Copyright (C) 2012 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+Index by function name
+
+  [25] _GLOBAL__sub_I__ZN8SolutionC2Ei [9] SteadyStateGA::Evaluate1(Solution&) [4] void std::__insertion_sort<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > > >(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, __gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >)
+   [3] SteadyStateGA::Crossover4(Solution const&, Solution const&, Solution&) [14] SteadyStateGA::Mutation4(Solution&) [12] void std::__introsort_loop<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, long>(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, __gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, long)
+   [2] SteadyStateGA::Selection4(Solution&, int&) [10] SteadyStateGA::Normalize(Solution&) [6] void std::__unguarded_linear_insert<__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > > >(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >)
+  [15] SteadyStateGA::Replacement4(Solution const&, Solution const&, Solution const&, int, int) [5] std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > >::_M_insert_aux(__gnu_cxx::__normal_iterator<std::pair<Solution, int>*, std::vector<std::pair<Solution, int>, std::allocator<std::pair<Solution, int> > > >, std::pair<Solution, int> const&) [16] __gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > > std::__find<__gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > >, int>(__gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int const*, std::vector<int, std::allocator<int> > >, int const&, std::random_access_iterator_tag)
+  [11] SteadyStateGA::GenerateRandomSolution1(Solution&) [8] std::vector<int, std::allocator<int> >::operator=(std::vector<int, std::allocator<int> > const&) [13] __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > > std::__find<__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int>(__gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, __gnu_cxx::__normal_iterator<int*, std::vector<int, std::allocator<int> > >, int const&, std::random_access_iterator_tag)
+   [1] SteadyStateGA::GA()    [17] std::_Rb_tree<int, int, std::_Identity<int>, std::less<int>, std::allocator<int> >::_M_copy(std::_Rb_tree_node<int> const*, std::_Rb_tree_node<int>*) [7] std::_Bit_iterator std::__find<std::_Bit_iterator, bool>(std::_Bit_iterator, std::_Bit_iterator, bool const&, std::random_access_iterator_tag)
