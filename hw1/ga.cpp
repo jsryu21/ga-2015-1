@@ -539,21 +539,33 @@ void SteadyStateGA::Mutation5(Solution& s) {
     if (solutionLen < 4) {
         return;
     }
-    std::vector< int > rs;
-    for (int i = 0; i < 3; ++i) {
-        int r = std::rand() % (solutionLen - 1);
-        while (std::find(rs.begin(), rs.end(), r) != rs.end()) {
-            r = std::rand() % (solutionLen - 1);
-        }
-        rs.push_back(r + 1);
+    int deficitSolutionLen = solutionLen - 1;
+    int r1 = (std::rand() % deficitSolutionLen) + 1;
+    int r2 = (std::rand() % deficitSolutionLen) + 1;
+    while (r1 == r2) {
+        r2 = (std::rand() % deficitSolutionLen) + 1;
     }
-    std::sort(rs.begin(), rs.end());
-    std::vector< int > mutatedGenes(solutionLen);
-    std::vector< int >::iterator iter = std::copy(s.Chromosome.begin() + rs[2], s.Chromosome.end(), mutatedGenes.begin());
-    iter = std::copy(s.Chromosome.begin() + rs[1], s.Chromosome.begin() + rs[2], iter);
-    iter = std::copy(s.Chromosome.begin() + rs[0], s.Chromosome.begin() + rs[1], iter);
-    std::copy(s.Chromosome.begin(), s.Chromosome.begin() + rs[0], iter);
-    std::copy(mutatedGenes.begin(), mutatedGenes.end(), s.Chromosome.begin());
+    int r3 = (std::rand() % deficitSolutionLen) + 1;
+    while (r1 == r3 || r2 == r3) {
+        r3 = (std::rand() % deficitSolutionLen) + 1;
+    }
+    if (r1 > r2) {
+        std::swap(r1, r2);
+    }
+    if (r2 > r3) {
+        std::swap(r2, r3);
+    }
+    if (r1 > r2) {
+        std::swap(r1, r2);
+    }
+    std::vector< int >::iterator r1It = s.Chromosome.begin() + r1;
+    std::vector< int >::iterator r2It = s.Chromosome.begin() + r2;
+    std::vector< int >::iterator r3It = s.Chromosome.begin() + r3;
+    std::vector< int >::iterator it = std::copy(r3It, s.Chromosome.end(), tempSolution.Chromosome.begin());
+    it = std::copy(r2It, r3It, it);
+    it = std::copy(r1It, r2It, it);
+    std::copy(s.Chromosome.begin(), r1It, it);
+    std::copy(tempSolution.Chromosome.begin(), tempSolution.Chromosome.end(), s.Chromosome.begin());
     Normalize(s);
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
