@@ -80,23 +80,27 @@ class SteadyStateGA {
         void Selection2(Solution& s, int& index);
         void Selection3(Solution& s, int& index);
         void Selection4(Solution& s, int& index);
+        void Selection5(Solution& s, int& index);
         void Crossover1(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover2(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover3(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover4(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover5(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover6(const Solution& p1, const Solution& p2, Solution& c);
+        void Crossover7(const Solution& p1, const Solution& p2, Solution& c);
         void Mutation1(Solution& s);
         void Mutation2(Solution& s);
         void Mutation3(Solution& s);
         void Mutation4(Solution& s);
         void Mutation5(Solution& s);
         void Mutation6(Solution& s);
+        void Mutation7(Solution& s);
         void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
         void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
         void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
         void Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
         void Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
+        void Replacement6(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
         void GA();
         void Answer();
         void PrintAllSolutions();
@@ -277,6 +281,19 @@ void SteadyStateGA::Selection4(Solution& p, int& index) {
     } else {
         p = population[remainIndex];
         index = remainIndex;
+    }
+}
+
+void SteadyStateGA::Selection5(Solution& p, int& index) {
+    int r = std::rand() % 100;
+    if (r < 32) {
+        Selection1(p, index);
+    } else if (r < 55) {
+        Selection2(p, index);
+    } else if (r < 86) {
+        Selection3(p, index);
+    } else {
+        Selection4(p, index);
     }
 }
 
@@ -553,6 +570,21 @@ void SteadyStateGA::Crossover6(const Solution& p1, const Solution& p2, Solution&
     CALL_MEMBER_FN(*this, Evaluate)(c);
 }
 
+void SteadyStateGA::Crossover7(const Solution& p1, const Solution& p2, Solution& c) {
+    int r = std::rand() % 100;
+    if (r < 25) {
+        Crossover1(p1, p2, c);
+    } else if (r < 38) {
+        Crossover2(p1, p2, c);
+    } else if (r < 73) {
+        Crossover3(p1, p2, c);
+    } else if (r < 84) {
+        Crossover4(p1, p2, c);
+    } else {
+        Crossover5(p1, p2, c);
+    }
+}
+
 // mutate the solution s
 // two-swap or swap-change
 void SteadyStateGA::Mutation1(Solution& s) {
@@ -653,6 +685,21 @@ void SteadyStateGA::Mutation6(Solution& s) {
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
+void SteadyStateGA::Mutation7(Solution& s) {
+    int r = std::rand() % 99;
+    if (r < 9) {
+        Mutation1(s);
+    } else if (r < 18) {
+        Mutation3(s);
+    } else if (r < 74) {
+        Mutation4(s);
+    } else if (r < 75) {
+        Mutation5(s);
+    } else {
+        Mutation6(s);
+    }
+}
+
 // replace one solution from the population with the new offspring
 // currently any random solution can be replaced
 void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
@@ -706,6 +753,17 @@ void SteadyStateGA::Replacement4(const Solution& p1, const Solution& p2, const S
 void SteadyStateGA::Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
     if (offspr.Fitness < p1.Fitness || offspr.Fitness < p2.Fitness) {
         Replacement3(p1, p2, offspr, p1Index, p2Index);
+    }
+}
+
+void SteadyStateGA::Replacement6(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
+    int r = std::rand() % 100;
+    if (r < 10) {
+        Replacement3(p1, p2, offspr, p1Index, p2Index);
+    } else if (r < 57) {
+        Replacement4(p1, p2, offspr, p1Index, p2Index);
+    } else {
+        Replacement5(p1, p2, offspr, p1Index, p2Index);
     }
 }
 
@@ -797,10 +855,10 @@ int main(int argc, char* argv[]) {
     SteadyStateGA::EvaluateFn Evaluate = &SteadyStateGA::Evaluate1;
     SteadyStateGA::GenerateRandomSolutionFn GenerateRandomSolution = &SteadyStateGA::GenerateRandomSolution1;
     SteadyStateGA::PreprocessFn Preprocess = NULL;
-    SteadyStateGA::SelectionFn Selection = &SteadyStateGA::Selection1;
-    SteadyStateGA::CrossoverFn Crossover = &SteadyStateGA::Crossover1;
-    SteadyStateGA::MutationFn Mutation = &SteadyStateGA::Mutation1;
-    SteadyStateGA::ReplacementFn Replacement = &SteadyStateGA::Replacement1;
+    SteadyStateGA::SelectionFn Selection = &SteadyStateGA::Selection5;
+    SteadyStateGA::CrossoverFn Crossover = &SteadyStateGA::Crossover7;
+    SteadyStateGA::MutationFn Mutation = &SteadyStateGA::Mutation7;
+    SteadyStateGA::ReplacementFn Replacement = &SteadyStateGA::Replacement6;
     if (argc == 5) {
         switch (*argv[1]) {
             case '0':
