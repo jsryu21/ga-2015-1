@@ -767,6 +767,8 @@ void SteadyStateGA::Replacement6(const Solution& p1, const Solution& p2, const S
     }
 }
 
+static int NUM_GENERATION = 0;
+
 // a "steady-state" GA
 void SteadyStateGA::GA() {
     std::time_t begin = std::time(0);
@@ -791,11 +793,20 @@ void SteadyStateGA::GA() {
         CALL_MEMBER_FN(*this, Crossover)(p1, p2, c);
         CALL_MEMBER_FN(*this, Mutation)(c);
         CALL_MEMBER_FN(*this, Replacement)(p1, p2, c, p1Index, p2Index);
+        ++NUM_GENERATION;
+        double total_fitenss = 0;
+        if (NUM_GENERATION % 500000 == 0) {
+            for (int i = 0; i < PSIZE; ++i) {
+                total_fitenss += population[i].Fitness;
+            }
+            std::cout << NUM_GENERATION << "," << total_fitenss / PSIZE << "," << record.Fitness << std::endl;
+        }
     }
 }
 
 // print the best solution found to stdout
 void SteadyStateGA::Answer() {
+    std::cout << NUM_GENERATION << std::endl;
     std::cout << record << std::endl;
 }
 
