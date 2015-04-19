@@ -1,8 +1,7 @@
 all: ga
 
 ga: ga.o test_case.o
-	g++ -O3 -pg -o ga ga.o test_case.o
-	ctags *
+	g++ -O3 -o ga ga.o test_case.o
 
 ga.o: ga.cpp
 	g++ -O3 -c ga.cpp
@@ -19,3 +18,4 @@ clean:
 	rm -f *.out
 	rm -f *.out.*
 	rm -f core
+	rm -f tags

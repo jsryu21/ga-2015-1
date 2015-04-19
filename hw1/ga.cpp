@@ -44,10 +44,11 @@ Solution::Solution(int len) : Chromosome(std::vector< int >(len)),
 }
 
 std::ostream& operator<<(std::ostream& os, const Solution& solution) {
-    for (int i = 0; i < solution.Chromosome.size(); ++i) {
-        os << solution.Chromosome[i] << " ";
+    int len = solution.Chromosome.size() - 1;
+    for (int i = 0; i < len; ++i) {
+        os << (solution.Chromosome[i] + 1) << " ";
     }
-    os << ": " << solution.Fitness;
+    os << (solution.Chromosome[len] + 1);
     return os;
 }
 
@@ -65,7 +66,8 @@ class SteadyStateGA {
         typedef void (SteadyStateGA::*CrossoverFn)(const Solution& p1, const Solution& p2, Solution& c);
         typedef void (SteadyStateGA::*MutationFn)(Solution& s);
         typedef void (SteadyStateGA::*ReplacementFn)(const Solution& p1, const Solution& p2, const Solution& s, int p1Index, int p2Index);
-        SteadyStateGA(const TestCase& testCase
+        SteadyStateGA(const std::time_t& begin_
+                , const TestCase& testCase
                 , EvaluateFn Evaluate_
                 , GenerateRandomSolutionFn GenerateRandomSolution_
                 , PreprocessFn Preprocess_
@@ -117,6 +119,7 @@ class SteadyStateGA {
         void UpdateAdditoryFitnesses(int index, const Solution& s);
         void UpdateRecords(int index, const Solution& s);
 
+        std::time_t begin;
         int solutionLen;
         const std::vector< std::vector< double > >& solutionDist;
         long long timeLimit;
@@ -135,14 +138,16 @@ class SteadyStateGA {
         std::vector< std::vector< int > > cityNeighbors;
 };
 
-SteadyStateGA::SteadyStateGA(const TestCase& testCase
+SteadyStateGA::SteadyStateGA(const std::time_t& begin_
+        , const TestCase& testCase
         , EvaluateFn Evaluate_
         , GenerateRandomSolutionFn GenerateRandomSolution_
         , PreprocessFn Preprocess_
         , SelectionFn Selection_
         , CrossoverFn Crossover_
         , MutationFn Mutation_
-        , ReplacementFn Replacement_) : solutionLen(testCase.NumLocations),
+        , ReplacementFn Replacement_) : begin(begin_),
+    solutionLen(testCase.NumLocations),
     solutionDist(testCase.Dist),
     timeLimit(testCase.TimeLimit),
     population(PSIZE, Solution(solutionLen)),
@@ -767,11 +772,8 @@ void SteadyStateGA::Replacement6(const Solution& p1, const Solution& p2, const S
     }
 }
 
-static int NUM_GENERATION = 0;
-
 // a "steady-state" GA
 void SteadyStateGA::GA() {
-    std::time_t begin = std::time(0);
     for (int i = 0; i < PSIZE; ++i) {
         CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
     }
@@ -793,20 +795,11 @@ void SteadyStateGA::GA() {
         CALL_MEMBER_FN(*this, Crossover)(p1, p2, c);
         CALL_MEMBER_FN(*this, Mutation)(c);
         CALL_MEMBER_FN(*this, Replacement)(p1, p2, c, p1Index, p2Index);
-        ++NUM_GENERATION;
-        double total_fitenss = 0;
-        if (NUM_GENERATION % 500000 == 0) {
-            for (int i = 0; i < PSIZE; ++i) {
-                total_fitenss += population[i].Fitness;
-            }
-            std::cout << NUM_GENERATION << "," << total_fitenss / PSIZE << "," << record.Fitness << std::endl;
-        }
     }
 }
 
 // print the best solution found to stdout
 void SteadyStateGA::Answer() {
-    std::cout << NUM_GENERATION << std::endl;
     std::cout << record << std::endl;
 }
 
@@ -859,6 +852,7 @@ void SteadyStateGA::UpdateRecords(int index, const Solution& s) {
 }
 
 int main(int argc, char* argv[]) {
+    std::time_t begin = std::time(0);
     // http://en.cppreference.com/w/cpp/numeric/random/rand
     std::srand(std::time(0));
     TestCase testCase;
@@ -947,7 +941,8 @@ int main(int argc, char* argv[]) {
                 break;
         }
     }
-    SteadyStateGA ga(testCase
+    SteadyStateGA ga(begin
+            , testCase
             , Evaluate
             , GenerateRandomSolution
             , Preprocess
