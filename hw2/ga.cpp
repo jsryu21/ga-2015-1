@@ -76,14 +76,15 @@ class SteadyStateGA {
                 , ReplacementFn Replacement_
                 , NeedPerturbationFn NeedPerturbation
                 , PerturbationFn Perturbation_);
-        void Evaluate1(Solution& s);
-        void GenerateRandomSolution1(Solution& s);
-        void Preprocess1();
+        void Evaluate0(Solution& s);
+        void GenerateRandomSolution0(Solution& s);
+        void Preprocess0();
+        void Selection0(Solution& s, int& index);
         void Selection1(Solution& s, int& index);
         void Selection2(Solution& s, int& index);
         void Selection3(Solution& s, int& index);
         void Selection4(Solution& s, int& index);
-        void Selection5(Solution& s, int& index);
+        void Crossover0(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover1(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover2(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover3(const Solution& p1, const Solution& p2, Solution& c);
@@ -94,7 +95,7 @@ class SteadyStateGA {
         void Crossover8(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover9(const Solution& p1, const Solution& p2, Solution& c);
         void Crossover10(const Solution& p1, const Solution& p2, Solution& c);
-        void Crossover11(const Solution& p1, const Solution& p2, Solution& c);
+        void Mutation0(Solution& s);
         void Mutation1(Solution& s);
         void Mutation2(Solution& s);
         void Mutation3(Solution& s);
@@ -105,7 +106,7 @@ class SteadyStateGA {
         void Mutation8(Solution& s);
         void Mutation9(Solution& s);
         void Mutation10(Solution& s);
-        void Mutation11(Solution& s);
+        void LocalOpt0(Solution& offspring, Solution& optOffSpring);
         void LocalOpt1(Solution& offspring, Solution& optOffSpring);
         void LocalOpt2(Solution& offspring, Solution& optOffSpring);
         void LocalOpt3(Solution& offspring, Solution& optOffSpring);
@@ -113,7 +114,7 @@ class SteadyStateGA {
         void LocalOpt5(Solution& offspring, Solution& optOffSpring);
         void LocalOpt6(Solution& offspring, Solution& optOffSpring);
         void LocalOpt7(Solution& offspring, Solution& optOffSpring);
-        void LocalOpt8(Solution& offspring, Solution& optOffSpring);
+        void Replacement0(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
@@ -123,17 +124,16 @@ class SteadyStateGA {
         void Replacement7(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement8(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement9(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
-        void Replacement10(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void NeedPerturbation0(bool& need, const Solution& offspr);
         void NeedPerturbation1(bool& need, const Solution& offspr);
         void NeedPerturbation2(bool& need, const Solution& offspr);
         void NeedPerturbation3(bool& need, const Solution& offspr);
         void NeedPerturbation4(bool& need, const Solution& offspr);
         void NeedPerturbation5(bool& need, const Solution& offspr);
+        void Perturbation0();
         void Perturbation1();
         void Perturbation2();
         void Perturbation3();
-        void Perturbation4();
         void GA();
         void Answer();
         void PrintAllSolutions();
@@ -223,7 +223,7 @@ SteadyStateGA::SteadyStateGA(const std::time_t& begin_
 }
 
 // calculate the fitness of s and store it into s->f
-void SteadyStateGA::Evaluate1(Solution& s) {
+void SteadyStateGA::Evaluate0(Solution& s) {
     s.Fitness = 0;
     int end = solutionLen - 1;
     for (int i = 0; i < end; ++i) {
@@ -233,7 +233,7 @@ void SteadyStateGA::Evaluate1(Solution& s) {
 }
 
 // generate a random order-based solution at s
-void SteadyStateGA::GenerateRandomSolution1(Solution& s) {
+void SteadyStateGA::GenerateRandomSolution0(Solution& s) {
     std::random_shuffle(randomSolution.Chromosome.begin(), randomSolution.Chromosome.end());
     std::vector< int >::iterator zeroIter = std::find(randomSolution.Chromosome.begin(), randomSolution.Chromosome.end(), 0);
     std::copy(randomSolution.Chromosome.begin(), zeroIter, std::copy(zeroIter, randomSolution.Chromosome.end(), s.Chromosome.begin()));
@@ -241,7 +241,7 @@ void SteadyStateGA::GenerateRandomSolution1(Solution& s) {
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
-void SteadyStateGA::Preprocess1() {
+void SteadyStateGA::Preprocess0() {
     sumOfAdjustedFitnesses = 0;
     double offset = maxFitness + (maxFitness - record.Fitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
     for (int i = 0; i < PSIZE; ++i) {
@@ -257,13 +257,13 @@ void SteadyStateGA::Preprocess1() {
 
 // choose one solution from the population
 // currently this operator randomly chooses one w/ uniform Distribution
-void SteadyStateGA::Selection1(Solution& p, int& index) {
+void SteadyStateGA::Selection0(Solution& p, int& index) {
     index = std::rand() % PSIZE;
     p = population[index];
 }
 
-// Roulette Wheel - Preprocess1
-void SteadyStateGA::Selection2(Solution& p, int& index) {
+// Roulette Wheel - Preprocess0
+void SteadyStateGA::Selection1(Solution& p, int& index) {
     double point = static_cast< double >(std::rand()) * sumOfAdjustedFitnesses / RAND_MAX;
     std::vector< double >::iterator it = std::lower_bound(cumulativeFitnesses.begin(), cumulativeFitnesses.end(), point);
     if (it != cumulativeFitnesses.end()) {
@@ -276,7 +276,7 @@ void SteadyStateGA::Selection2(Solution& p, int& index) {
 }
 
 // Tournament
-void SteadyStateGA::Selection3(Solution& p, int& index) {
+void SteadyStateGA::Selection2(Solution& p, int& index) {
     int r1 = std::rand() % PSIZE;
     int r2 = std::rand() % PSIZE;
     const Solution& p1 = population[r1];
@@ -302,7 +302,7 @@ void SteadyStateGA::Selection3(Solution& p, int& index) {
 }
 
 // General Tournament
-void SteadyStateGA::Selection4(Solution& p, int& index) {
+void SteadyStateGA::Selection3(Solution& p, int& index) {
     double largestFitness = 0;
     double secLargestFitness = 0;
     int largestIndex = 0;
@@ -336,23 +336,23 @@ void SteadyStateGA::Selection4(Solution& p, int& index) {
     }
 }
 
-void SteadyStateGA::Selection5(Solution& p, int& index) {
+void SteadyStateGA::Selection4(Solution& p, int& index) {
     int r = std::rand() % 100;
     if (r < 32) {
-        Selection1(p, index);
+        Selection0(p, index);
     } else if (r < 55) {
-        Selection2(p, index);
+        Selection1(p, index);
     } else if (r < 86) {
-        Selection3(p, index);
+        Selection2(p, index);
     } else {
-        Selection4(p, index);
+        Selection3(p, index);
     }
 }
 
 // combine the given parents p1 and p2
 // and store the generated solution at c
 // currently the child will be same as p1
-void SteadyStateGA::Crossover1(const Solution& p1, const Solution& p2, Solution& c) {
+void SteadyStateGA::Crossover0(const Solution& p1, const Solution& p2, Solution& c) {
     if (std::rand() % 2 == 0) {
         std::copy(p1.Chromosome.begin(), p1.Chromosome.end(), c.Chromosome.begin());
     } else {
@@ -361,7 +361,7 @@ void SteadyStateGA::Crossover1(const Solution& p1, const Solution& p2, Solution&
     CALL_MEMBER_FN(*this, Evaluate)(c);
 }
 
-void SteadyStateGA::Crossover2(const Solution& p1, const Solution& p2, Solution& c) {
+void SteadyStateGA::Crossover1(const Solution& p1, const Solution& p2, Solution& c) {
     int point = std::rand() % solutionLen;
     std::vector< int >::const_iterator pointIter = p1.Chromosome.begin() + point;
     std::copy(p1.Chromosome.begin(), pointIter, c.Chromosome.begin());
@@ -399,7 +399,7 @@ void SteadyStateGA::Crossover2(const Solution& p1, const Solution& p2, Solution&
 }
 
 // order crossover
-void SteadyStateGA::Crossover3(const Solution& p1, const Solution& p2, Solution& c) {
+void SteadyStateGA::Crossover2(const Solution& p1, const Solution& p2, Solution& c) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     while (p == q) {
@@ -443,7 +443,7 @@ void SteadyStateGA::Crossover3(const Solution& p1, const Solution& p2, Solution&
 }
 
 // cycle crossover
-void SteadyStateGA::Crossover4(const Solution& p1, const Solution& p2, Solution& c) {
+void SteadyStateGA::Crossover3(const Solution& p1, const Solution& p2, Solution& c) {
     bool turn = true;
     std::fill(geneDupChecker.begin(), geneDupChecker.end(), false);
     std::vector< bool >::iterator it = geneDupChecker.begin();
@@ -479,7 +479,7 @@ void SteadyStateGA::Crossover4(const Solution& p1, const Solution& p2, Solution&
 }
 
 // PMX : partially matched crossover
-void SteadyStateGA::Crossover5(const Solution& p1, const Solution& p2, Solution& c) {
+void SteadyStateGA::Crossover4(const Solution& p1, const Solution& p2, Solution& c) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     while (p == q) {
@@ -520,7 +520,7 @@ void SteadyStateGA::Crossover5(const Solution& p1, const Solution& p2, Solution&
 
 // edge recombination
 // http://www.rubicite.com/Tutorials/GeneticAlgorithms/CrossoverOperators/EdgeRecombinationCrossoverOperator.aspx
-void SteadyStateGA::Crossover6(const Solution& p1, const Solution& p2, Solution& c) {
+void SteadyStateGA::Crossover5(const Solution& p1, const Solution& p2, Solution& c) {
     int end = solutionLen - 1;
     {
         int p1Prev = p1.Chromosome[end];
@@ -622,56 +622,56 @@ void SteadyStateGA::Crossover6(const Solution& p1, const Solution& p2, Solution&
     CALL_MEMBER_FN(*this, Evaluate)(c);
 }
 
-void SteadyStateGA::Crossover7(const Solution& p1, const Solution& p2, Solution& c) {
+void SteadyStateGA::Crossover6(const Solution& p1, const Solution& p2, Solution& c) {
     int r = std::rand() % 100;
     if (r < 25) {
-        Crossover1(p1, p2, c);
+        Crossover0(p1, p2, c);
     } else if (r < 38) {
-        Crossover2(p1, p2, c);
+        Crossover1(p1, p2, c);
     } else if (r < 73) {
-        Crossover3(p1, p2, c);
+        Crossover2(p1, p2, c);
     } else if (r < 84) {
-        Crossover4(p1, p2, c);
+        Crossover3(p1, p2, c);
     } else {
-        Crossover5(p1, p2, c);
+        Crossover4(p1, p2, c);
+    }
+}
+
+void SteadyStateGA::Crossover7(const Solution& p1, const Solution& p2, Solution& c) {
+    if (((p1.Fitness / record.Fitness) < 1.2) || ((p2.Fitness / record.Fitness) < 1.2)) {
+        Crossover1(p1, p2, c);
+    } else {
+        Crossover0(p1, p2, c);
     }
 }
 
 void SteadyStateGA::Crossover8(const Solution& p1, const Solution& p2, Solution& c) {
     if (((p1.Fitness / record.Fitness) < 1.2) || ((p2.Fitness / record.Fitness) < 1.2)) {
-        Crossover2(p1, p2, c);
+        Crossover0(p1, p2, c);
     } else {
         Crossover1(p1, p2, c);
     }
 }
 
 void SteadyStateGA::Crossover9(const Solution& p1, const Solution& p2, Solution& c) {
-    if (((p1.Fitness / record.Fitness) < 1.2) || ((p2.Fitness / record.Fitness) < 1.2)) {
+    if (p1.Fitness < averageFitness || p2.Fitness < averageFitness) {
         Crossover1(p1, p2, c);
     } else {
-        Crossover2(p1, p2, c);
+        Crossover0(p1, p2, c);
     }
 }
 
 void SteadyStateGA::Crossover10(const Solution& p1, const Solution& p2, Solution& c) {
     if (p1.Fitness < averageFitness || p2.Fitness < averageFitness) {
-        Crossover2(p1, p2, c);
+        Crossover0(p1, p2, c);
     } else {
         Crossover1(p1, p2, c);
-    }
-}
-
-void SteadyStateGA::Crossover11(const Solution& p1, const Solution& p2, Solution& c) {
-    if (p1.Fitness < averageFitness || p2.Fitness < averageFitness) {
-        Crossover1(p1, p2, c);
-    } else {
-        Crossover2(p1, p2, c);
     }
 }
 
 // mutate the solution s
 // two-swap or swap-change
-void SteadyStateGA::Mutation1(Solution& s) {
+void SteadyStateGA::Mutation0(Solution& s) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     std::swap(s.Chromosome[p], s.Chromosome[q]); // swap
@@ -680,7 +680,7 @@ void SteadyStateGA::Mutation1(Solution& s) {
 }
 
 // typical mutation for tsp
-void SteadyStateGA::Mutation2(Solution& s) {
+void SteadyStateGA::Mutation1(Solution& s) {
     for (int i = 0; i < solutionLen; ++i) {
         double r = static_cast< double >(std::rand()) / RAND_MAX;
         if (r < TYPICAL_MUTATION_THRESHOLD) {
@@ -693,7 +693,7 @@ void SteadyStateGA::Mutation2(Solution& s) {
 }
 
 // range shuffle
-void SteadyStateGA::Mutation3(Solution& s) {
+void SteadyStateGA::Mutation2(Solution& s) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     if (p > q) {
@@ -705,7 +705,7 @@ void SteadyStateGA::Mutation3(Solution& s) {
 }
 
 // inversion == 2-change(two-change)
-void SteadyStateGA::Mutation4(Solution& s) {
+void SteadyStateGA::Mutation3(Solution& s) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     if (p > q) {
@@ -717,7 +717,7 @@ void SteadyStateGA::Mutation4(Solution& s) {
 }
 
 // double bridge kick move
-void SteadyStateGA::Mutation5(Solution& s) {
+void SteadyStateGA::Mutation4(Solution& s) {
     if (solutionLen < 4) {
         return;
     }
@@ -753,7 +753,7 @@ void SteadyStateGA::Mutation5(Solution& s) {
 }
 
 // or change
-void SteadyStateGA::Mutation6(Solution& s) {
+void SteadyStateGA::Mutation5(Solution& s) {
     int p = std::rand() % solutionLen;
     int q = std::rand() % solutionLen;
     while (p == q) {
@@ -769,54 +769,54 @@ void SteadyStateGA::Mutation6(Solution& s) {
     CALL_MEMBER_FN(*this, Evaluate)(s);
 }
 
-void SteadyStateGA::Mutation7(Solution& s) {
+void SteadyStateGA::Mutation6(Solution& s) {
     int r = std::rand() % 99;
     if (r < 9) {
-        Mutation1(s);
+        Mutation0(s);
     } else if (r < 18) {
-        Mutation3(s);
+        Mutation2(s);
     } else if (r < 74) {
-        Mutation4(s);
+        Mutation3(s);
     } else if (r < 75) {
-        Mutation5(s);
+        Mutation4(s);
     } else {
-        Mutation6(s);
+        Mutation5(s);
+    }
+}
+
+void SteadyStateGA::Mutation7(Solution& s) {
+    if ((s.Fitness / record.Fitness) < 1.2) {
+        Mutation0(s);
+    } else {
+        Mutation3(s);
     }
 }
 
 void SteadyStateGA::Mutation8(Solution& s) {
     if ((s.Fitness / record.Fitness) < 1.2) {
-        Mutation1(s);
+        Mutation3(s);
     } else {
-        Mutation4(s);
+        Mutation0(s);
     }
 }
 
 void SteadyStateGA::Mutation9(Solution& s) {
-    if ((s.Fitness / record.Fitness) < 1.2) {
-        Mutation4(s);
+    if (s.Fitness < averageFitness) {
+        Mutation0(s);
     } else {
-        Mutation1(s);
+        Mutation3(s);
     }
 }
 
 void SteadyStateGA::Mutation10(Solution& s) {
     if (s.Fitness < averageFitness) {
-        Mutation1(s);
+        Mutation3(s);
     } else {
-        Mutation4(s);
+        Mutation0(s);
     }
 }
 
-void SteadyStateGA::Mutation11(Solution& s) {
-    if (s.Fitness < averageFitness) {
-        Mutation4(s);
-    } else {
-        Mutation1(s);
-    }
-}
-
-void SteadyStateGA::LocalOpt1(Solution& offspring, Solution& optOffSpring) {
+void SteadyStateGA::LocalOpt0(Solution& offspring, Solution& optOffSpring) {
     // http://on-demand.gputechconf.com/gtc/2014/presentations/S4534-high-speed-2-opt-tsp-solver.pdf
     while (true) {
         int reverseBegin = -1;
@@ -850,7 +850,7 @@ void SteadyStateGA::LocalOpt1(Solution& offspring, Solution& optOffSpring) {
     std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
 }
 
-void SteadyStateGA::LocalOpt2(Solution& offspring, Solution& optOffSpring) {
+void SteadyStateGA::LocalOpt1(Solution& offspring, Solution& optOffSpring) {
     while (true) {
         int reverseBegin = -1;
         int reverseEnd = -1;
@@ -885,7 +885,7 @@ void SteadyStateGA::LocalOpt2(Solution& offspring, Solution& optOffSpring) {
     std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
 }
 
-void SteadyStateGA::LocalOpt3(Solution& offspring, Solution& optOffSpring) {
+void SteadyStateGA::LocalOpt2(Solution& offspring, Solution& optOffSpring) {
     int improve = 0;
     while (improve < 20) {
         int reverseBegin = -1;
@@ -922,7 +922,7 @@ void SteadyStateGA::LocalOpt3(Solution& offspring, Solution& optOffSpring) {
     std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
 }
 
-void SteadyStateGA::LocalOpt4(Solution& offspring, Solution& optOffSpring) {
+void SteadyStateGA::LocalOpt3(Solution& offspring, Solution& optOffSpring) {
     int improve = 0;
     while (improve < 20) {
         int reverseBegin = -1;
@@ -959,7 +959,7 @@ void SteadyStateGA::LocalOpt4(Solution& offspring, Solution& optOffSpring) {
     std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
 }
 
-void SteadyStateGA::LocalOpt5(Solution& offspring, Solution& optOffSpring) {
+void SteadyStateGA::LocalOpt4(Solution& offspring, Solution& optOffSpring) {
     std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
     while (true) {
         int reverseBegin = -1;
@@ -992,7 +992,7 @@ void SteadyStateGA::LocalOpt5(Solution& offspring, Solution& optOffSpring) {
     }
 }
 
-void SteadyStateGA::LocalOpt6(Solution& offspring, Solution& optOffSpring) {
+void SteadyStateGA::LocalOpt5(Solution& offspring, Solution& optOffSpring) {
     std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
     while (true) {
         int reverseBegin = -1;
@@ -1027,7 +1027,7 @@ void SteadyStateGA::LocalOpt6(Solution& offspring, Solution& optOffSpring) {
     }
 }
 
-void SteadyStateGA::LocalOpt7(Solution& offspring, Solution& optOffSpring) {
+void SteadyStateGA::LocalOpt6(Solution& offspring, Solution& optOffSpring) {
     std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
     int improve = 0;
     while (improve < 20) {
@@ -1064,7 +1064,7 @@ void SteadyStateGA::LocalOpt7(Solution& offspring, Solution& optOffSpring) {
     }
 }
 
-void SteadyStateGA::LocalOpt8(Solution& offspring, Solution& optOffSpring) {
+void SteadyStateGA::LocalOpt7(Solution& offspring, Solution& optOffSpring) {
     std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
     int improve = 0;
     while (improve < 20) {
@@ -1103,20 +1103,20 @@ void SteadyStateGA::LocalOpt8(Solution& offspring, Solution& optOffSpring) {
 
 // replace one solution from the population with the new offspring
 // currently any random solution can be replaced
-void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
+void SteadyStateGA::Replacement0(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
     int p = std::rand() % PSIZE;
     UpdateStatistics(p, offspr);
     population[p] = offspr;
 }
 
 // elitism
-void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
+void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
     UpdateStatistics(worstIndex, offspr);
     population[worstIndex] = offspr;
 }
 
 // preselection
-void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
+void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
     if (p1.Fitness < p2.Fitness) {
         UpdateStatistics(p2Index, offspr);
         population[p2Index] = offspr;
@@ -1126,52 +1126,52 @@ void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const S
     }
 }
 
+void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
+    if (optOffSpring.Fitness < p1.Fitness || optOffSpring.Fitness < p2.Fitness) {
+        Replacement2(p1, p2, offspr, optOffSpring, p1Index, p2Index);
+    } else {
+        Replacement1(p1, p2, offspr, optOffSpring, p1Index, p2Index);
+    }
+}
+
 void SteadyStateGA::Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
     if (optOffSpring.Fitness < p1.Fitness || optOffSpring.Fitness < p2.Fitness) {
-        Replacement3(p1, p2, offspr, optOffSpring, p1Index, p2Index);
-    } else {
         Replacement2(p1, p2, offspr, optOffSpring, p1Index, p2Index);
     }
 }
 
 void SteadyStateGA::Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
-    if (optOffSpring.Fitness < p1.Fitness || optOffSpring.Fitness < p2.Fitness) {
+    int r = std::rand() % 100;
+    if (r < 10) {
+        Replacement2(p1, p2, offspr, optOffSpring, p1Index, p2Index);
+    } else if (r < 57) {
         Replacement3(p1, p2, offspr, optOffSpring, p1Index, p2Index);
+    } else {
+        Replacement4(p1, p2, offspr, optOffSpring, p1Index, p2Index);
     }
 }
 
 void SteadyStateGA::Replacement6(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
-    int r = std::rand() % 100;
-    if (r < 10) {
-        Replacement3(p1, p2, offspr, optOffSpring, p1Index, p2Index);
-    } else if (r < 57) {
-        Replacement4(p1, p2, offspr, optOffSpring, p1Index, p2Index);
-    } else {
+    if ((optOffSpring.Fitness / record.Fitness) < 1.2) {
         Replacement5(p1, p2, offspr, optOffSpring, p1Index, p2Index);
     }
 }
 
 void SteadyStateGA::Replacement7(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
-    if ((optOffSpring.Fitness / record.Fitness) < 1.2) {
-        Replacement6(p1, p2, offspr, optOffSpring, p1Index, p2Index);
+    if ((optOffSpring.Fitness / record.Fitness) >= 1.2) {
+        Replacement5(p1, p2, offspr, optOffSpring, p1Index, p2Index);
     }
 }
 
 void SteadyStateGA::Replacement8(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
-    if ((optOffSpring.Fitness / record.Fitness) >= 1.2) {
-        Replacement6(p1, p2, offspr, optOffSpring, p1Index, p2Index);
+    if (averageFitness < optOffSpring.Fitness) {
+        Replacement5(p1, p2, offspr, optOffSpring, p1Index, p2Index);
     }
 }
 
 void SteadyStateGA::Replacement9(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
-    if (averageFitness < optOffSpring.Fitness) {
-        Replacement6(p1, p2, offspr, optOffSpring, p1Index, p2Index);
-    }
-}
-
-void SteadyStateGA::Replacement10(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
     if (averageFitness >= optOffSpring.Fitness) {
-        Replacement6(p1, p2, offspr, optOffSpring, p1Index, p2Index);
+        Replacement5(p1, p2, offspr, optOffSpring, p1Index, p2Index);
     }
 }
 
@@ -1214,7 +1214,7 @@ void SteadyStateGA::NeedPerturbation5(bool& need, const Solution& offspr) {
     }
 }
 
-void SteadyStateGA::Perturbation1() {
+void SteadyStateGA::Perturbation0() {
     for (int i = 0; i < PSIZE; ++i) {
         if (population[i].Fitness > averageFitness) {
             CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
@@ -1223,7 +1223,7 @@ void SteadyStateGA::Perturbation1() {
     }
 }
 
-void SteadyStateGA::Perturbation2() {
+void SteadyStateGA::Perturbation1() {
     for (int i = 0; i < PSIZE; ++i) {
         if (population[i].Fitness > record.Fitness) {
             CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
@@ -1232,7 +1232,7 @@ void SteadyStateGA::Perturbation2() {
     }
 }
 
-void SteadyStateGA::Perturbation3() {
+void SteadyStateGA::Perturbation2() {
     double standard = (averageFitness + record.Fitness) / 2;
     for (int i = 0; i < PSIZE; ++i) {
         if (population[i].Fitness > standard) {
@@ -1242,7 +1242,7 @@ void SteadyStateGA::Perturbation3() {
     }
 }
 
-void SteadyStateGA::Perturbation4() {
+void SteadyStateGA::Perturbation3() {
     double standard = (averageFitness + maxFitness) / 2;
     for (int i = 0; i < PSIZE; ++i) {
         if (population[i].Fitness > standard) {
@@ -1319,7 +1319,7 @@ void SteadyStateGA::InitRecords() {
 }
 
 void SteadyStateGA::UpdateStatistics(int index, const Solution& s) {
-    if (Preprocess == &SteadyStateGA::Preprocess1) {
+    if (Preprocess == &SteadyStateGA::Preprocess0) {
         UpdateAdditoryFitnesses(index, s);
     }
 
@@ -1357,164 +1357,164 @@ int main(int argc, char* argv[]) {
     std::srand(std::time(0));
     TestCase testCase;
     //testCase.PrintTestCase();
-    SteadyStateGA::EvaluateFn Evaluate = &SteadyStateGA::Evaluate1;
-    SteadyStateGA::GenerateRandomSolutionFn GenerateRandomSolution = &SteadyStateGA::GenerateRandomSolution1;
+    SteadyStateGA::EvaluateFn Evaluate = &SteadyStateGA::Evaluate0;
+    SteadyStateGA::GenerateRandomSolutionFn GenerateRandomSolution = &SteadyStateGA::GenerateRandomSolution0;
     SteadyStateGA::PreprocessFn Preprocess = NULL;
-    SteadyStateGA::SelectionFn Selection = &SteadyStateGA::Selection5;
-    SteadyStateGA::CrossoverFn Crossover = &SteadyStateGA::Crossover7;
-    SteadyStateGA::MutationFn Mutation = &SteadyStateGA::Mutation7;
-    SteadyStateGA::LocalOptFn LocalOpt = &SteadyStateGA::LocalOpt1;
-    SteadyStateGA::ReplacementFn Replacement = &SteadyStateGA::Replacement6;
+    SteadyStateGA::SelectionFn Selection = &SteadyStateGA::Selection4;
+    SteadyStateGA::CrossoverFn Crossover = &SteadyStateGA::Crossover6;
+    SteadyStateGA::MutationFn Mutation = &SteadyStateGA::Mutation6;
+    SteadyStateGA::LocalOptFn LocalOpt = &SteadyStateGA::LocalOpt0;
+    SteadyStateGA::ReplacementFn Replacement = &SteadyStateGA::Replacement5;
     SteadyStateGA::NeedPerturbationFn NeedPerturbation = &SteadyStateGA::NeedPerturbation0;
-    SteadyStateGA::PerturbationFn Perturbation = &SteadyStateGA::Perturbation1;
+    SteadyStateGA::PerturbationFn Perturbation = &SteadyStateGA::Perturbation0;
     if (argc == 8) {
         switch (atoi(argv[1])) {
             case 0:
                 Preprocess = NULL;
-                Selection = &SteadyStateGA::Selection1;
+                Selection = &SteadyStateGA::Selection0;
                 break;
             case 1:
-                Preprocess = &SteadyStateGA::Preprocess1;
-                Selection = &SteadyStateGA::Selection2;
+                Preprocess = &SteadyStateGA::Preprocess0;
+                Selection = &SteadyStateGA::Selection1;
                 break;
             case 2:
+                Preprocess = NULL;
+                Selection = &SteadyStateGA::Selection2;
+                break;
+            case 3:
                 Preprocess = NULL;
                 Selection = &SteadyStateGA::Selection3;
                 break;
-            case 3:
-                Preprocess = NULL;
-                Selection = &SteadyStateGA::Selection4;
-                break;
             case 4:
                 Preprocess = NULL;
-                Selection = &SteadyStateGA::Selection5;
+                Selection = &SteadyStateGA::Selection4;
         }
         switch (atoi(argv[2])) {
             case 0:
-                Crossover = &SteadyStateGA::Crossover1;
+                Crossover = &SteadyStateGA::Crossover0;
                 break;
             case 1:
-                Crossover = &SteadyStateGA::Crossover2;
+                Crossover = &SteadyStateGA::Crossover1;
                 break;
             case 2:
-                Crossover = &SteadyStateGA::Crossover3;
+                Crossover = &SteadyStateGA::Crossover2;
                 break;
             case 3:
-                Crossover = &SteadyStateGA::Crossover4;
+                Crossover = &SteadyStateGA::Crossover3;
                 break;
             case 4:
-                Crossover = &SteadyStateGA::Crossover5;
+                Crossover = &SteadyStateGA::Crossover4;
                 break;
             case 5:
-                Crossover = &SteadyStateGA::Crossover6;
+                Crossover = &SteadyStateGA::Crossover5;
                 break;
             case 6:
-                Crossover = &SteadyStateGA::Crossover7;
+                Crossover = &SteadyStateGA::Crossover6;
                 break;
             case 7:
-                Crossover = &SteadyStateGA::Crossover8;
+                Crossover = &SteadyStateGA::Crossover7;
                 break;
             case 8:
-                Crossover = &SteadyStateGA::Crossover9;
+                Crossover = &SteadyStateGA::Crossover8;
                 break;
             case 9:
-                Crossover = &SteadyStateGA::Crossover10;
+                Crossover = &SteadyStateGA::Crossover9;
                 break;
             case 10:
-                Crossover = &SteadyStateGA::Crossover11;
+                Crossover = &SteadyStateGA::Crossover10;
                 break;
         }
         switch (atoi(argv[3])) {
             case 0:
-                Mutation = &SteadyStateGA::Mutation1;
+                Mutation = &SteadyStateGA::Mutation0;
                 break;
             case 1:
-                Mutation = &SteadyStateGA::Mutation2;
+                Mutation = &SteadyStateGA::Mutation1;
                 break;
             case 2:
-                Mutation = &SteadyStateGA::Mutation3;
+                Mutation = &SteadyStateGA::Mutation2;
                 break;
             case 3:
-                Mutation = &SteadyStateGA::Mutation4;
+                Mutation = &SteadyStateGA::Mutation3;
                 break;
             case 4:
-                Mutation = &SteadyStateGA::Mutation5;
+                Mutation = &SteadyStateGA::Mutation4;
                 break;
             case 5:
-                Mutation = &SteadyStateGA::Mutation6;
+                Mutation = &SteadyStateGA::Mutation5;
                 break;
             case 6:
-                Mutation = &SteadyStateGA::Mutation7;
+                Mutation = &SteadyStateGA::Mutation6;
                 break;
             case 7:
-                Mutation = &SteadyStateGA::Mutation8;
+                Mutation = &SteadyStateGA::Mutation7;
                 break;
             case 8:
-                Mutation = &SteadyStateGA::Mutation9;
+                Mutation = &SteadyStateGA::Mutation8;
                 break;
             case 9:
-                Mutation = &SteadyStateGA::Mutation10;
+                Mutation = &SteadyStateGA::Mutation9;
                 break;
             case 10:
-                Mutation = &SteadyStateGA::Mutation11;
+                Mutation = &SteadyStateGA::Mutation10;
                 break;
         }
         switch (atoi(argv[4])) {
             case 0:
-                LocalOpt = &SteadyStateGA::LocalOpt1;
+                LocalOpt = &SteadyStateGA::LocalOpt0;
                 break;
             case 1:
-                LocalOpt = &SteadyStateGA::LocalOpt2;
+                LocalOpt = &SteadyStateGA::LocalOpt1;
                 break;
             case 2:
-                LocalOpt = &SteadyStateGA::LocalOpt3;
+                LocalOpt = &SteadyStateGA::LocalOpt2;
                 break;
             case 3:
-                LocalOpt = &SteadyStateGA::LocalOpt4;
+                LocalOpt = &SteadyStateGA::LocalOpt3;
                 break;
             case 4:
-                LocalOpt = &SteadyStateGA::LocalOpt5;
+                LocalOpt = &SteadyStateGA::LocalOpt4;
                 break;
             case 5:
-                LocalOpt = &SteadyStateGA::LocalOpt6;
+                LocalOpt = &SteadyStateGA::LocalOpt5;
                 break;
             case 6:
-                LocalOpt = &SteadyStateGA::LocalOpt7;
+                LocalOpt = &SteadyStateGA::LocalOpt6;
                 break;
             case 7:
-                LocalOpt = &SteadyStateGA::LocalOpt8;
+                LocalOpt = &SteadyStateGA::LocalOpt7;
                 break;
         }
         switch (atoi(argv[5])) {
             case 0:
-                Replacement = &SteadyStateGA::Replacement1;
+                Replacement = &SteadyStateGA::Replacement0;
                 break;
             case 1:
-                Replacement = &SteadyStateGA::Replacement2;
+                Replacement = &SteadyStateGA::Replacement1;
                 break;
             case 2:
-                Replacement = &SteadyStateGA::Replacement3;
+                Replacement = &SteadyStateGA::Replacement2;
                 break;
             case 3:
-                Replacement = &SteadyStateGA::Replacement4;
+                Replacement = &SteadyStateGA::Replacement3;
                 break;
             case 4:
-                Replacement = &SteadyStateGA::Replacement5;
+                Replacement = &SteadyStateGA::Replacement4;
                 break;
             case 5:
-                Replacement = &SteadyStateGA::Replacement6;
+                Replacement = &SteadyStateGA::Replacement5;
                 break;
             case 6:
-                Replacement = &SteadyStateGA::Replacement7;
+                Replacement = &SteadyStateGA::Replacement6;
                 break;
             case 7:
-                Replacement = &SteadyStateGA::Replacement8;
+                Replacement = &SteadyStateGA::Replacement7;
                 break;
             case 8:
-                Replacement = &SteadyStateGA::Replacement9;
+                Replacement = &SteadyStateGA::Replacement8;
                 break;
             case 9:
-                Replacement = &SteadyStateGA::Replacement10;
+                Replacement = &SteadyStateGA::Replacement9;
                 break;
         }
         switch (atoi(argv[6])) {
@@ -1522,16 +1522,16 @@ int main(int argc, char* argv[]) {
                 NeedPerturbation = &SteadyStateGA::NeedPerturbation0;
                 break;
             case 1:
-                NeedPerturbation = &SteadyStateGA::NeedPerturbation1;
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation0;
                 break;
             case 2:
-                NeedPerturbation = &SteadyStateGA::NeedPerturbation2;
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation1;
                 break;
             case 3:
-                NeedPerturbation = &SteadyStateGA::NeedPerturbation3;
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation2;
                 break;
             case 4:
-                NeedPerturbation = &SteadyStateGA::NeedPerturbation4;
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation3;
                 break;
             case 5:
                 NeedPerturbation = &SteadyStateGA::NeedPerturbation5;
@@ -1539,16 +1539,16 @@ int main(int argc, char* argv[]) {
         }
         switch (atoi(argv[7])) {
             case 0:
-                Perturbation = &SteadyStateGA::Perturbation1;
+                Perturbation = &SteadyStateGA::Perturbation0;
                 break;
             case 1:
-                Perturbation = &SteadyStateGA::Perturbation2;
+                Perturbation = &SteadyStateGA::Perturbation1;
                 break;
             case 2:
-                Perturbation = &SteadyStateGA::Perturbation3;
+                Perturbation = &SteadyStateGA::Perturbation2;
                 break;
             case 3:
-                Perturbation = &SteadyStateGA::Perturbation4;
+                Perturbation = &SteadyStateGA::Perturbation3;
                 break;
         }
 
