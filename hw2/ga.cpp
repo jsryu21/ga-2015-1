@@ -62,7 +62,7 @@ class SteadyStateGA {
         typedef void (SteadyStateGA::*MutationFn)(Solution& s);
         typedef void (SteadyStateGA::*LocalOptFn)(Solution& offspring, Solution& optOffSpring);
         typedef void (SteadyStateGA::*ReplacementFn)(const Solution& p1, const Solution& p2, const Solution& s, const Solution& optS, int p1Index, int p2Index);
-        typedef void (SteadyStateGA::*NeedPerturbationFn)(bool& need);
+        typedef void (SteadyStateGA::*NeedPerturbationFn)(bool& need, const Solution& s);
         typedef void (SteadyStateGA::*PerturbationFn)();
         SteadyStateGA(const std::time_t& begin_
                 , const TestCase& testCase
@@ -124,16 +124,15 @@ class SteadyStateGA {
         void Replacement8(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement9(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement10(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
-        void NeedPerturbation1(bool& need);
-        void NeedPerturbation2(bool& need);
-        void NeedPerturbation3(bool& need);
-        void NeedPerturbation4(bool& need);
-        void NeedPerturbation5(bool& need);
+        void NeedPerturbation1(bool& need, const Solution& offspr);
+        void NeedPerturbation2(bool& need, const Solution& offspr);
+        void NeedPerturbation3(bool& need, const Solution& offspr);
+        void NeedPerturbation4(bool& need, const Solution& offspr);
+        void NeedPerturbation5(bool& need, const Solution& offspr);
         void Perturbation1();
         void Perturbation2();
         void Perturbation3();
         void Perturbation4();
-        void Perturbation5();
         void GA();
         void Answer();
         void PrintAllSolutions();
@@ -160,6 +159,7 @@ class SteadyStateGA {
         // population of solutions
         std::vector< Solution > population;
         Solution record;
+        int numRecordGeneration;
         double maxFitness;
         double totalFitness;
         double averageFitness;
@@ -191,6 +191,7 @@ SteadyStateGA::SteadyStateGA(const std::time_t& begin_
     timeLimit(testCase.TimeLimit),
     population(PSIZE, Solution(solutionLen)),
     record(solutionLen),
+    numRecordGeneration(0),
     maxFitness(0),
     totalFitness(0),
     averageFitness(0),
@@ -1189,19 +1190,39 @@ void SteadyStateGA::Replacement10(const Solution& p1, const Solution& p2, const 
     }
 }
 
-void SteadyStateGA::NeedPerturbation1(bool& need) {
+void SteadyStateGA::NeedPerturbation1(bool& need, const Solution& offspr) {
+    need = ((averageFitness / record.Fitness) < 2);
 }
 
-void SteadyStateGA::NeedPerturbation2(bool& need) {
+void SteadyStateGA::NeedPerturbation2(bool& need, const Solution& offspr) {
+    need = ((maxFitness / record.Fitness) < 4);
 }
 
-void SteadyStateGA::NeedPerturbation3(bool& need) {
+void SteadyStateGA::NeedPerturbation3(bool& need, const Solution& offspr) {
+    double squareTotal = 0;
+    for (int i = 0; i < PSIZE; ++i) {
+        squareTotal += std::pow(population[i].Fitness, 2);
+    }
+    double dispersion = (squareTotal / PSIZE) - averageFitness * averageFitness;
+    need = (dispersion < 1);
 }
 
-void SteadyStateGA::NeedPerturbation4(bool& need) {
+void SteadyStateGA::NeedPerturbation4(bool& need, const Solution& offspr) {
+    need = (std::abs(record.Fitness - offspr.Fitness) <= std::numeric_limits< double >::epsilon());
 }
 
-void SteadyStateGA::NeedPerturbation5(bool& need) {
+void SteadyStateGA::NeedPerturbation5(bool& need, const Solution& offspr) {
+    if (std::abs(record.Fitness - offspr.Fitness) <= std::numeric_limits< double >::epsilon()) {
+        numRecordGeneration += 1;
+    } else {
+        numRecordGeneration += 2;
+    }
+    if (numRecordGeneration > 10) {
+        need = true;
+        numRecordGeneration = 0;
+    } else {
+        need = false;
+    }
 }
 
 void SteadyStateGA::Perturbation1() {
@@ -1214,9 +1235,6 @@ void SteadyStateGA::Perturbation3() {
 }
 
 void SteadyStateGA::Perturbation4() {
-}
-
-void SteadyStateGA::Perturbation5() {
 }
 
 // a "steady-state" GA
@@ -1245,7 +1263,7 @@ void SteadyStateGA::GA() {
         CALL_MEMBER_FN(*this, LocalOpt)(c, optC);
         CALL_MEMBER_FN(*this, Replacement)(p1, p2, c, optC, p1Index, p2Index);
         bool need = false;
-        CALL_MEMBER_FN(*this, NeedPerturbation)(need);
+        CALL_MEMBER_FN(*this, NeedPerturbation)(need, c);
         if (need) {
             CALL_MEMBER_FN(*this, Perturbation)();
         }
@@ -1505,9 +1523,6 @@ int main(int argc, char* argv[]) {
                 break;
             case 3:
                 Perturbation = &SteadyStateGA::Perturbation4;
-                break;
-            case 4:
-                Perturbation = &SteadyStateGA::Perturbation5;
                 break;
         }
 
