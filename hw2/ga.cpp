@@ -149,6 +149,7 @@ class SteadyStateGA {
         PerturbationFn Perturbation;
         void Normalize(Solution& s);
         void InitRecords();
+        void UpdateStatistics(int index, const Solution& s);
         void UpdateAdditoryFitnesses(int index, const Solution& s);
         void UpdateRecords(int index, const Solution& s);
 
@@ -1103,40 +1104,23 @@ void SteadyStateGA::LocalOpt8(Solution& offspring, Solution& optOffSpring) {
 // currently any random solution can be replaced
 void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
     int p = std::rand() % PSIZE;
-
-    if (Preprocess == &SteadyStateGA::Preprocess1) {
-        UpdateAdditoryFitnesses(p, offspr);
-    }
-
-    UpdateRecords(p, offspr);
+    UpdateStatistics(p, offspr);
     population[p] = offspr;
 }
 
 // elitism
 void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
-    if (Preprocess == &SteadyStateGA::Preprocess1) {
-        UpdateAdditoryFitnesses(worstIndex, offspr);
-    }
-
-    UpdateRecords(worstIndex, offspr);
+    UpdateStatistics(worstIndex, offspr);
     population[worstIndex] = offspr;
 }
 
 // preselection
 void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
     if (p1.Fitness < p2.Fitness) {
-        if (Preprocess == &SteadyStateGA::Preprocess1) {
-            UpdateAdditoryFitnesses(p2Index, offspr);
-        }
-
-        UpdateRecords(p2Index, offspr);
+        UpdateStatistics(p2Index, offspr);
         population[p2Index] = offspr;
     } else {
-        if (Preprocess == &SteadyStateGA::Preprocess1) {
-            UpdateAdditoryFitnesses(p1Index, offspr);
-        }
-
-        UpdateRecords(p1Index, offspr);
+        UpdateStatistics(p1Index, offspr);
         population[p1Index] = offspr;
     }
 }
@@ -1226,15 +1210,41 @@ void SteadyStateGA::NeedPerturbation5(bool& need, const Solution& offspr) {
 }
 
 void SteadyStateGA::Perturbation1() {
+    for (int i = 0; i < PSIZE; ++i) {
+        if (population[i].Fitness > averageFitness) {
+            CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
+            UpdateStatistics(i, population[i]);
+        }
+    }
 }
 
 void SteadyStateGA::Perturbation2() {
+    for (int i = 0; i < PSIZE; ++i) {
+        if (population[i].Fitness > record.Fitness) {
+            CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
+            UpdateStatistics(i, population[i]);
+        }
+    }
 }
 
 void SteadyStateGA::Perturbation3() {
+    double standard = (averageFitness + record.Fitness) / 2;
+    for (int i = 0; i < PSIZE; ++i) {
+        if (population[i].Fitness > standard) {
+            CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
+            UpdateStatistics(i, population[i]);
+        }
+    }
 }
 
 void SteadyStateGA::Perturbation4() {
+    double standard = (averageFitness + maxFitness) / 2;
+    for (int i = 0; i < PSIZE; ++i) {
+        if (population[i].Fitness > standard) {
+            CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
+            UpdateStatistics(i, population[i]);
+        }
+    }
 }
 
 // a "steady-state" GA
@@ -1301,6 +1311,14 @@ void SteadyStateGA::InitRecords() {
         totalFitness += population[i].Fitness;
     }
     averageFitness = totalFitness / PSIZE;
+}
+
+void SteadyStateGA::UpdateStatistics(int index, const Solution& s) {
+    if (Preprocess == &SteadyStateGA::Preprocess1) {
+        UpdateAdditoryFitnesses(index, s);
+    }
+
+    UpdateRecords(index, s);
 }
 
 void SteadyStateGA::UpdateAdditoryFitnesses(int index, const Solution& s) {
