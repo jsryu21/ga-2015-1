@@ -62,6 +62,7 @@ class SteadyStateGA {
         typedef void (SteadyStateGA::*MutationFn)(Solution& s);
         typedef void (SteadyStateGA::*LocalOptFn)(Solution& offspring, Solution& optOffSpring);
         typedef void (SteadyStateGA::*ReplacementFn)(const Solution& p1, const Solution& p2, const Solution& s, const Solution& optS, int p1Index, int p2Index);
+        typedef void (SteadyStateGA::*PerturbationFn)();
         SteadyStateGA(const std::time_t& begin_
                 , const TestCase& testCase
                 , EvaluateFn Evaluate_
@@ -71,7 +72,8 @@ class SteadyStateGA {
                 , CrossoverFn Crossover_
                 , MutationFn Mutation_
                 , LocalOptFn LocalOpt_
-                , ReplacementFn Replacement_);
+                , ReplacementFn Replacement_
+                , PerturbationFn Perturbation_);
         void Evaluate1(Solution& s);
         void GenerateRandomSolution1(Solution& s);
         void Preprocess1();
@@ -120,6 +122,7 @@ class SteadyStateGA {
         void Replacement8(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement9(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement10(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
+        void Perturbation1();
         void GA();
         void Answer();
         void PrintAllSolutions();
@@ -132,6 +135,7 @@ class SteadyStateGA {
         MutationFn Mutation;
         LocalOptFn LocalOpt;
         ReplacementFn Replacement;
+        PerturbationFn Perturbation;
         void Normalize(Solution& s);
         void InitRecords();
         void UpdateAdditoryFitnesses(int index, const Solution& s);
@@ -167,7 +171,8 @@ SteadyStateGA::SteadyStateGA(const std::time_t& begin_
         , CrossoverFn Crossover_
         , MutationFn Mutation_
         , LocalOptFn LocalOpt_
-        , ReplacementFn Replacement_) : begin(begin_),
+        , ReplacementFn Replacement_
+        , PerturbationFn Perturbation_) : begin(begin_),
     solutionLen(testCase.NumLocations),
     solutionDist(testCase.Dist),
     timeLimit(testCase.TimeLimit),
@@ -192,7 +197,8 @@ SteadyStateGA::SteadyStateGA(const std::time_t& begin_
     Crossover(Crossover_),
     Mutation(Mutation_),
     LocalOpt(LocalOpt_),
-    Replacement(Replacement_)
+    Replacement(Replacement_),
+    Perturbation(Perturbation_)
 {
     for (int i = 0; i < solutionLen; ++i) {
         randomSolution.Chromosome[i] = i;
@@ -1169,6 +1175,9 @@ void SteadyStateGA::Replacement10(const Solution& p1, const Solution& p2, const 
     }
 }
 
+void SteadyStateGA::Perturbation1() {
+}
+
 // a "steady-state" GA
 void SteadyStateGA::GA() {
     for (int i = 0; i < PSIZE; ++i) {
@@ -1194,6 +1203,7 @@ void SteadyStateGA::GA() {
         CALL_MEMBER_FN(*this, Mutation)(c);
         CALL_MEMBER_FN(*this, LocalOpt)(c, optC);
         CALL_MEMBER_FN(*this, Replacement)(p1, p2, c, optC, p1Index, p2Index);
+        CALL_MEMBER_FN(*this, Perturbation)();
     }
 }
 
@@ -1269,7 +1279,8 @@ int main(int argc, char* argv[]) {
     SteadyStateGA::MutationFn Mutation = &SteadyStateGA::Mutation7;
     SteadyStateGA::LocalOptFn LocalOpt = &SteadyStateGA::LocalOpt1;
     SteadyStateGA::ReplacementFn Replacement = &SteadyStateGA::Replacement6;
-    if (argc == 6) {
+    SteadyStateGA::PerturbationFn Perturbation = &SteadyStateGA::Perturbation1;
+    if (argc == 7) {
         switch (atoi(argv[1])) {
             case 0:
                 Preprocess = NULL;
@@ -1419,6 +1430,11 @@ int main(int argc, char* argv[]) {
                 Replacement = &SteadyStateGA::Replacement10;
                 break;
         }
+        switch (atoi(argv[6])) {
+            case 0:
+                Perturbation = &SteadyStateGA::Perturbation1;
+                break;
+        }
     }
     SteadyStateGA ga(begin
             , testCase
@@ -1429,7 +1445,8 @@ int main(int argc, char* argv[]) {
             , Crossover
             , Mutation
             , LocalOpt
-            , Replacement);
+            , Replacement
+            , Perturbation);
     ga.GA();
     ga.Answer();
     //ga.PrintAllSolutions();
