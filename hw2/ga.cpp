@@ -61,7 +61,7 @@ class SteadyStateGA {
         typedef void (SteadyStateGA::*CrossoverFn)(const Solution& p1, const Solution& p2, Solution& c);
         typedef void (SteadyStateGA::*MutationFn)(Solution& s);
         typedef void (SteadyStateGA::*LocalOptFn)(Solution& offspring, Solution& optOffSpring);
-        typedef void (SteadyStateGA::*ReplacementFn)(const Solution& p1, const Solution& p2, const Solution& s, int p1Index, int p2Index);
+        typedef void (SteadyStateGA::*ReplacementFn)(const Solution& p1, const Solution& p2, const Solution& s, const Solution& optS, int p1Index, int p2Index);
         SteadyStateGA(const std::time_t& begin_
                 , const TestCase& testCase
                 , EvaluateFn Evaluate_
@@ -95,12 +95,17 @@ class SteadyStateGA {
         void Mutation6(Solution& s);
         void Mutation7(Solution& s);
         void LocalOpt1(Solution& offspring, Solution& optOffSpring);
-        void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
-        void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
-        void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
-        void Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
-        void Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
-        void Replacement6(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index);
+        void LocalOpt2(Solution& offspring, Solution& optOffSpring);
+        void LocalOpt3(Solution& offspring, Solution& optOffSpring);
+        void LocalOpt4(Solution& offspring, Solution& optOffSpring);
+        void LocalOpt5(Solution& offspring, Solution& optOffSpring);
+        void LocalOpt6(Solution& offspring, Solution& optOffSpring);
+        void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
+        void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
+        void Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
+        void Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
+        void Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
+        void Replacement6(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void GA();
         void Answer();
         void PrintAllSolutions();
@@ -708,6 +713,111 @@ void SteadyStateGA::Mutation7(Solution& s) {
 
 void SteadyStateGA::LocalOpt1(Solution& offspring, Solution& optOffSpring) {
     // http://on-demand.gputechconf.com/gtc/2014/presentations/S4534-high-speed-2-opt-tsp-solver.pdf
+    while (true) {
+        int reverseBegin = -1;
+        int reverseEnd = -1;
+        double minChange = 0;
+        for (int i = 0; i < solutionLen - 2; ++i) {
+            for (int j = i + 2; j < solutionLen; ++j) {
+                int jPlus = (j + 1) % solutionLen;
+                double change = solutionDist[offspring.Chromosome[i]][offspring.Chromosome[j]];
+                change += solutionDist[offspring.Chromosome[i + 1]][offspring.Chromosome[jPlus]];
+                change -= solutionDist[offspring.Chromosome[i]][offspring.Chromosome[i + 1]];
+                change -= solutionDist[offspring.Chromosome[j]][offspring.Chromosome[jPlus]];
+                if ((std::abs(minChange - change) > 0.000001) && (minChange > change)) {
+                    minChange = change;
+                    reverseBegin = i + 1;
+                    reverseEnd = j + 1;
+                }
+            }
+        }
+        if (reverseBegin != -1 && reverseEnd != -1) {
+            if (reverseBegin > reverseEnd) {
+                std::swap(reverseBegin, reverseEnd);
+            }
+            std::reverse(offspring.Chromosome.begin() + reverseBegin, offspring.Chromosome.begin() + reverseEnd);
+            Normalize(offspring);
+            CALL_MEMBER_FN(*this, Evaluate)(offspring);
+        } else {
+            break;
+        }
+    }
+    std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
+}
+
+void SteadyStateGA::LocalOpt2(Solution& offspring, Solution& optOffSpring) {
+    while (true) {
+        int reverseBegin = -1;
+        int reverseEnd = -1;
+        double minChange = 0;
+        bool found = false;
+        for (int i = 0; (i < solutionLen - 2) && (found == false); ++i) {
+            for (int j = i + 2; (j < solutionLen) && (found == false); ++j) {
+                int jPlus = (j + 1) % solutionLen;
+                double change = solutionDist[offspring.Chromosome[i]][offspring.Chromosome[j]];
+                change += solutionDist[offspring.Chromosome[i + 1]][offspring.Chromosome[jPlus]];
+                change -= solutionDist[offspring.Chromosome[i]][offspring.Chromosome[i + 1]];
+                change -= solutionDist[offspring.Chromosome[j]][offspring.Chromosome[jPlus]];
+                if ((std::abs(minChange - change) > 0.000001) && (minChange > change)) {
+                    found = true;
+                    minChange = change;
+                    reverseBegin = i + 1;
+                    reverseEnd = j + 1;
+                }
+            }
+        }
+        if (reverseBegin != -1 && reverseEnd != -1) {
+            if (reverseBegin > reverseEnd) {
+                std::swap(reverseBegin, reverseEnd);
+            }
+            std::reverse(offspring.Chromosome.begin() + reverseBegin, offspring.Chromosome.begin() + reverseEnd);
+            Normalize(offspring);
+            CALL_MEMBER_FN(*this, Evaluate)(offspring);
+        } else {
+            break;
+        }
+    }
+    std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
+}
+
+void SteadyStateGA::LocalOpt3(Solution& offspring, Solution& optOffSpring) {
+    int improve = 0;
+    while (improve < 20) {
+        int reverseBegin = -1;
+        int reverseEnd = -1;
+        double minChange = 0;
+        bool found = false;
+        for (int i = 0; (i < solutionLen - 2) && (found == false); ++i) {
+            for (int j = i + 2; (j < solutionLen) && (found == false); ++j) {
+                int jPlus = (j + 1) % solutionLen;
+                double change = solutionDist[offspring.Chromosome[i]][offspring.Chromosome[j]];
+                change += solutionDist[offspring.Chromosome[i + 1]][offspring.Chromosome[jPlus]];
+                change -= solutionDist[offspring.Chromosome[i]][offspring.Chromosome[i + 1]];
+                change -= solutionDist[offspring.Chromosome[j]][offspring.Chromosome[jPlus]];
+                if ((std::abs(minChange - change) > 0.000001) && (minChange > change)) {
+                    found = true;
+                    minChange = change;
+                    reverseBegin = i + 1;
+                    reverseEnd = j + 1;
+                }
+            }
+        }
+        if (reverseBegin != -1 && reverseEnd != -1) {
+            if (reverseBegin > reverseEnd) {
+                std::swap(reverseBegin, reverseEnd);
+            }
+            std::reverse(offspring.Chromosome.begin() + reverseBegin, offspring.Chromosome.begin() + reverseEnd);
+            Normalize(offspring);
+            CALL_MEMBER_FN(*this, Evaluate)(offspring);
+            ++improve;
+        } else {
+            break;
+        }
+    }
+    std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
+}
+
+void SteadyStateGA::LocalOpt4(Solution& offspring, Solution& optOffSpring) {
     std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
     while (true) {
         int reverseBegin = -1;
@@ -740,9 +850,81 @@ void SteadyStateGA::LocalOpt1(Solution& offspring, Solution& optOffSpring) {
     }
 }
 
+void SteadyStateGA::LocalOpt5(Solution& offspring, Solution& optOffSpring) {
+    std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
+    while (true) {
+        int reverseBegin = -1;
+        int reverseEnd = -1;
+        double minChange = 0;
+        bool found = false;
+        for (int i = 0; (i < solutionLen - 2) && (found == false); ++i) {
+            for (int j = i + 2; (j < solutionLen) && (found == false); ++j) {
+                int jPlus = (j + 1) % solutionLen;
+                double change = solutionDist[optOffSpring.Chromosome[i]][optOffSpring.Chromosome[j]];
+                change += solutionDist[optOffSpring.Chromosome[i + 1]][optOffSpring.Chromosome[jPlus]];
+                change -= solutionDist[optOffSpring.Chromosome[i]][optOffSpring.Chromosome[i + 1]];
+                change -= solutionDist[optOffSpring.Chromosome[j]][optOffSpring.Chromosome[jPlus]];
+                if ((std::abs(minChange - change) > 0.000001) && (minChange > change)) {
+                    found = true;
+                    minChange = change;
+                    reverseBegin = i + 1;
+                    reverseEnd = j + 1;
+                }
+            }
+        }
+        if (reverseBegin != -1 && reverseEnd != -1) {
+            if (reverseBegin > reverseEnd) {
+                std::swap(reverseBegin, reverseEnd);
+            }
+            std::reverse(optOffSpring.Chromosome.begin() + reverseBegin, optOffSpring.Chromosome.begin() + reverseEnd);
+            Normalize(optOffSpring);
+            CALL_MEMBER_FN(*this, Evaluate)(optOffSpring);
+        } else {
+            break;
+        }
+    }
+}
+
+void SteadyStateGA::LocalOpt6(Solution& offspring, Solution& optOffSpring) {
+    std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
+    int improve = 0;
+    while (improve < 20) {
+        int reverseBegin = -1;
+        int reverseEnd = -1;
+        double minChange = 0;
+        bool found = false;
+        for (int i = 0; (i < solutionLen - 2) && (found == false); ++i) {
+            for (int j = i + 2; (j < solutionLen) && (found == false); ++j) {
+                int jPlus = (j + 1) % solutionLen;
+                double change = solutionDist[optOffSpring.Chromosome[i]][optOffSpring.Chromosome[j]];
+                change += solutionDist[optOffSpring.Chromosome[i + 1]][optOffSpring.Chromosome[jPlus]];
+                change -= solutionDist[optOffSpring.Chromosome[i]][optOffSpring.Chromosome[i + 1]];
+                change -= solutionDist[optOffSpring.Chromosome[j]][optOffSpring.Chromosome[jPlus]];
+                if ((std::abs(minChange - change) > 0.000001) && (minChange > change)) {
+                    found = true;
+                    minChange = change;
+                    reverseBegin = i + 1;
+                    reverseEnd = j + 1;
+                }
+            }
+        }
+        if (reverseBegin != -1 && reverseEnd != -1) {
+            if (reverseBegin > reverseEnd) {
+                std::swap(reverseBegin, reverseEnd);
+            }
+            std::reverse(optOffSpring.Chromosome.begin() + reverseBegin, optOffSpring.Chromosome.begin() + reverseEnd);
+            Normalize(optOffSpring);
+            CALL_MEMBER_FN(*this, Evaluate)(optOffSpring);
+            ++improve;
+        } else {
+            break;
+        }
+    }
+}
+
 // replace one solution from the population with the new offspring
 // currently any random solution can be replaced
-void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
+void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
     int p = std::rand() % PSIZE;
 
     if (Preprocess == &SteadyStateGA::Preprocess1) {
@@ -754,7 +936,7 @@ void SteadyStateGA::Replacement1(const Solution& p1, const Solution& p2, const S
 }
 
 // elitism
-void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
+void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
     if (Preprocess == &SteadyStateGA::Preprocess1) {
         UpdateAdditoryFitnesses(worstIndex, offspr);
     }
@@ -764,7 +946,7 @@ void SteadyStateGA::Replacement2(const Solution& p1, const Solution& p2, const S
 }
 
 // preselection
-void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
+void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
     if (p1.Fitness < p2.Fitness) {
         if (Preprocess == &SteadyStateGA::Preprocess1) {
             UpdateAdditoryFitnesses(p2Index, offspr);
@@ -782,28 +964,28 @@ void SteadyStateGA::Replacement3(const Solution& p1, const Solution& p2, const S
     }
 }
 
-void SteadyStateGA::Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
-    if (offspr.Fitness < p1.Fitness || offspr.Fitness < p2.Fitness) {
-        Replacement3(p1, p2, offspr, p1Index, p2Index);
+void SteadyStateGA::Replacement4(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
+    if (optOffSpring.Fitness < p1.Fitness || optOffSpring.Fitness < p2.Fitness) {
+        Replacement3(p1, p2, offspr, optOffSpring, p1Index, p2Index);
     } else {
-        Replacement2(p1, p2, offspr, p1Index, p2Index);
+        Replacement2(p1, p2, offspr, optOffSpring, p1Index, p2Index);
     }
 }
 
-void SteadyStateGA::Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
-    if (offspr.Fitness < p1.Fitness || offspr.Fitness < p2.Fitness) {
-        Replacement3(p1, p2, offspr, p1Index, p2Index);
+void SteadyStateGA::Replacement5(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
+    if (optOffSpring.Fitness < p1.Fitness || optOffSpring.Fitness < p2.Fitness) {
+        Replacement3(p1, p2, offspr, optOffSpring, p1Index, p2Index);
     }
 }
 
-void SteadyStateGA::Replacement6(const Solution& p1, const Solution& p2, const Solution& offspr, int p1Index, int p2Index) {
+void SteadyStateGA::Replacement6(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
     int r = std::rand() % 100;
     if (r < 10) {
-        Replacement3(p1, p2, offspr, p1Index, p2Index);
+        Replacement3(p1, p2, offspr, optOffSpring, p1Index, p2Index);
     } else if (r < 57) {
-        Replacement4(p1, p2, offspr, p1Index, p2Index);
+        Replacement4(p1, p2, offspr, optOffSpring, p1Index, p2Index);
     } else {
-        Replacement5(p1, p2, offspr, p1Index, p2Index);
+        Replacement5(p1, p2, offspr, optOffSpring, p1Index, p2Index);
     }
 }
 
@@ -831,7 +1013,7 @@ void SteadyStateGA::GA() {
         CALL_MEMBER_FN(*this, Crossover)(p1, p2, c);
         CALL_MEMBER_FN(*this, Mutation)(c);
         CALL_MEMBER_FN(*this, LocalOpt)(c, optC);
-        CALL_MEMBER_FN(*this, Replacement)(p1, p2, optC, p1Index, p2Index);
+        CALL_MEMBER_FN(*this, Replacement)(p1, p2, c, optC, p1Index, p2Index);
     }
 }
 
@@ -902,7 +1084,7 @@ int main(int argc, char* argv[]) {
     SteadyStateGA::MutationFn Mutation = &SteadyStateGA::Mutation7;
     SteadyStateGA::LocalOptFn LocalOpt = &SteadyStateGA::LocalOpt1;
     SteadyStateGA::ReplacementFn Replacement = &SteadyStateGA::Replacement6;
-    if (argc == 5) {
+    if (argc == 6) {
         switch (*argv[1]) {
             case '0':
                 Preprocess = NULL;
@@ -962,6 +1144,26 @@ int main(int argc, char* argv[]) {
                 break;
         }
         switch (*argv[4]) {
+            case '0':
+                LocalOpt = &SteadyStateGA::LocalOpt1;
+                break;
+            case '1':
+                LocalOpt = &SteadyStateGA::LocalOpt2;
+                break;
+            case '2':
+                LocalOpt = &SteadyStateGA::LocalOpt3;
+                break;
+            case '3':
+                LocalOpt = &SteadyStateGA::LocalOpt4;
+                break;
+            case '4':
+                LocalOpt = &SteadyStateGA::LocalOpt5;
+                break;
+            case '5':
+                LocalOpt = &SteadyStateGA::LocalOpt6;
+                break;
+        }
+        switch (*argv[5]) {
             case '0':
                 Replacement = &SteadyStateGA::Replacement1;
                 break;
