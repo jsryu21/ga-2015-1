@@ -124,6 +124,7 @@ class SteadyStateGA {
         void Replacement8(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement9(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement10(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
+        void NeedPerturbation0(bool& need, const Solution& offspr);
         void NeedPerturbation1(bool& need, const Solution& offspr);
         void NeedPerturbation2(bool& need, const Solution& offspr);
         void NeedPerturbation3(bool& need, const Solution& offspr);
@@ -1174,6 +1175,10 @@ void SteadyStateGA::Replacement10(const Solution& p1, const Solution& p2, const 
     }
 }
 
+void SteadyStateGA::NeedPerturbation0(bool& need, const Solution& offspr) {
+    need = false;
+}
+
 void SteadyStateGA::NeedPerturbation1(bool& need, const Solution& offspr) {
     need = ((averageFitness / record.Fitness) < 2);
 }
@@ -1360,7 +1365,7 @@ int main(int argc, char* argv[]) {
     SteadyStateGA::MutationFn Mutation = &SteadyStateGA::Mutation7;
     SteadyStateGA::LocalOptFn LocalOpt = &SteadyStateGA::LocalOpt1;
     SteadyStateGA::ReplacementFn Replacement = &SteadyStateGA::Replacement6;
-    SteadyStateGA::NeedPerturbationFn NeedPerturbation = &SteadyStateGA::NeedPerturbation1;
+    SteadyStateGA::NeedPerturbationFn NeedPerturbation = &SteadyStateGA::NeedPerturbation0;
     SteadyStateGA::PerturbationFn Perturbation = &SteadyStateGA::Perturbation1;
     if (argc == 8) {
         switch (atoi(argv[1])) {
@@ -1514,18 +1519,21 @@ int main(int argc, char* argv[]) {
         }
         switch (atoi(argv[6])) {
             case 0:
-                NeedPerturbation = &SteadyStateGA::NeedPerturbation1;
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation0;
                 break;
             case 1:
-                NeedPerturbation = &SteadyStateGA::NeedPerturbation2;
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation1;
                 break;
             case 2:
-                NeedPerturbation = &SteadyStateGA::NeedPerturbation3;
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation2;
                 break;
             case 3:
-                NeedPerturbation = &SteadyStateGA::NeedPerturbation4;
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation3;
                 break;
             case 4:
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation4;
+                break;
+            case 5:
                 NeedPerturbation = &SteadyStateGA::NeedPerturbation5;
                 break;
         }
