@@ -62,6 +62,7 @@ class SteadyStateGA {
         typedef void (SteadyStateGA::*MutationFn)(Solution& s);
         typedef void (SteadyStateGA::*LocalOptFn)(Solution& offspring, Solution& optOffSpring);
         typedef void (SteadyStateGA::*ReplacementFn)(const Solution& p1, const Solution& p2, const Solution& s, const Solution& optS, int p1Index, int p2Index);
+        typedef void (SteadyStateGA::*NeedPerturbationFn)(bool& need);
         typedef void (SteadyStateGA::*PerturbationFn)();
         SteadyStateGA(const std::time_t& begin_
                 , const TestCase& testCase
@@ -73,6 +74,7 @@ class SteadyStateGA {
                 , MutationFn Mutation_
                 , LocalOptFn LocalOpt_
                 , ReplacementFn Replacement_
+                , NeedPerturbationFn NeedPerturbation
                 , PerturbationFn Perturbation_);
         void Evaluate1(Solution& s);
         void GenerateRandomSolution1(Solution& s);
@@ -122,7 +124,16 @@ class SteadyStateGA {
         void Replacement8(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement9(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement10(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
+        void NeedPerturbation1(bool& need);
+        void NeedPerturbation2(bool& need);
+        void NeedPerturbation3(bool& need);
+        void NeedPerturbation4(bool& need);
+        void NeedPerturbation5(bool& need);
         void Perturbation1();
+        void Perturbation2();
+        void Perturbation3();
+        void Perturbation4();
+        void Perturbation5();
         void GA();
         void Answer();
         void PrintAllSolutions();
@@ -135,6 +146,7 @@ class SteadyStateGA {
         MutationFn Mutation;
         LocalOptFn LocalOpt;
         ReplacementFn Replacement;
+        NeedPerturbationFn NeedPerturbation;
         PerturbationFn Perturbation;
         void Normalize(Solution& s);
         void InitRecords();
@@ -172,6 +184,7 @@ SteadyStateGA::SteadyStateGA(const std::time_t& begin_
         , MutationFn Mutation_
         , LocalOptFn LocalOpt_
         , ReplacementFn Replacement_
+        , NeedPerturbationFn NeedPerturbation_
         , PerturbationFn Perturbation_) : begin(begin_),
     solutionLen(testCase.NumLocations),
     solutionDist(testCase.Dist),
@@ -198,6 +211,7 @@ SteadyStateGA::SteadyStateGA(const std::time_t& begin_
     Mutation(Mutation_),
     LocalOpt(LocalOpt_),
     Replacement(Replacement_),
+    NeedPerturbation(NeedPerturbation_),
     Perturbation(Perturbation_)
 {
     for (int i = 0; i < solutionLen; ++i) {
@@ -1175,7 +1189,34 @@ void SteadyStateGA::Replacement10(const Solution& p1, const Solution& p2, const 
     }
 }
 
+void SteadyStateGA::NeedPerturbation1(bool& need) {
+}
+
+void SteadyStateGA::NeedPerturbation2(bool& need) {
+}
+
+void SteadyStateGA::NeedPerturbation3(bool& need) {
+}
+
+void SteadyStateGA::NeedPerturbation4(bool& need) {
+}
+
+void SteadyStateGA::NeedPerturbation5(bool& need) {
+}
+
 void SteadyStateGA::Perturbation1() {
+}
+
+void SteadyStateGA::Perturbation2() {
+}
+
+void SteadyStateGA::Perturbation3() {
+}
+
+void SteadyStateGA::Perturbation4() {
+}
+
+void SteadyStateGA::Perturbation5() {
 }
 
 // a "steady-state" GA
@@ -1203,7 +1244,11 @@ void SteadyStateGA::GA() {
         CALL_MEMBER_FN(*this, Mutation)(c);
         CALL_MEMBER_FN(*this, LocalOpt)(c, optC);
         CALL_MEMBER_FN(*this, Replacement)(p1, p2, c, optC, p1Index, p2Index);
-        CALL_MEMBER_FN(*this, Perturbation)();
+        bool need = false;
+        CALL_MEMBER_FN(*this, NeedPerturbation)(need);
+        if (need) {
+            CALL_MEMBER_FN(*this, Perturbation)();
+        }
     }
 }
 
@@ -1279,8 +1324,9 @@ int main(int argc, char* argv[]) {
     SteadyStateGA::MutationFn Mutation = &SteadyStateGA::Mutation7;
     SteadyStateGA::LocalOptFn LocalOpt = &SteadyStateGA::LocalOpt1;
     SteadyStateGA::ReplacementFn Replacement = &SteadyStateGA::Replacement6;
+    SteadyStateGA::NeedPerturbationFn NeedPerturbation = &SteadyStateGA::NeedPerturbation1;
     SteadyStateGA::PerturbationFn Perturbation = &SteadyStateGA::Perturbation1;
-    if (argc == 7) {
+    if (argc == 8) {
         switch (atoi(argv[1])) {
             case 0:
                 Preprocess = NULL;
@@ -1432,9 +1478,39 @@ int main(int argc, char* argv[]) {
         }
         switch (atoi(argv[6])) {
             case 0:
-                Perturbation = &SteadyStateGA::Perturbation1;
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation1;
+                break;
+            case 1:
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation2;
+                break;
+            case 2:
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation3;
+                break;
+            case 3:
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation4;
+                break;
+            case 4:
+                NeedPerturbation = &SteadyStateGA::NeedPerturbation5;
                 break;
         }
+        switch (atoi(argv[7])) {
+            case 0:
+                Perturbation = &SteadyStateGA::Perturbation1;
+                break;
+            case 1:
+                Perturbation = &SteadyStateGA::Perturbation2;
+                break;
+            case 2:
+                Perturbation = &SteadyStateGA::Perturbation3;
+                break;
+            case 3:
+                Perturbation = &SteadyStateGA::Perturbation4;
+                break;
+            case 4:
+                Perturbation = &SteadyStateGA::Perturbation5;
+                break;
+        }
+
     }
     SteadyStateGA ga(begin
             , testCase
@@ -1446,6 +1522,7 @@ int main(int argc, char* argv[]) {
             , Mutation
             , LocalOpt
             , Replacement
+            , NeedPerturbation
             , Perturbation);
     ga.GA();
     ga.Answer();
