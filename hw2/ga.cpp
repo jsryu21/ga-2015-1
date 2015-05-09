@@ -168,7 +168,7 @@ class SteadyStateGA {
         Solution tempSolution;
         std::vector< double > adjustedFitnesses;
         std::vector< double > cumulativeFitnesses;
-        double sumOfFitnesses;
+        double sumOfAdjustedFitnesses;
         std::vector< bool > geneDupChecker;
         std::vector< int > corrGene;
         std::vector< std::vector< int > > cityNeighbors;
@@ -200,7 +200,7 @@ SteadyStateGA::SteadyStateGA(const std::time_t& begin_
     tempSolution(solutionLen),
     adjustedFitnesses(PSIZE),
     cumulativeFitnesses(PSIZE),
-    sumOfFitnesses(0),
+    sumOfAdjustedFitnesses(0),
     geneDupChecker(solutionLen),
     corrGene(solutionLen),
     cityNeighbors(solutionLen, std::vector< int >(4, -1)),
@@ -240,11 +240,11 @@ void SteadyStateGA::GenerateRandomSolution1(Solution& s) {
 }
 
 void SteadyStateGA::Preprocess1() {
-    sumOfFitnesses = 0;
+    sumOfAdjustedFitnesses = 0;
     double offset = maxFitness + (maxFitness - record.Fitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
     for (int i = 0; i < PSIZE; ++i) {
         double adjustedFitness = offset - population[i].Fitness;
-        sumOfFitnesses += adjustedFitness;
+        sumOfAdjustedFitnesses += adjustedFitness;
         adjustedFitnesses[i] = adjustedFitness;
     }
     cumulativeFitnesses[0] = adjustedFitnesses[0];
@@ -262,7 +262,7 @@ void SteadyStateGA::Selection1(Solution& p, int& index) {
 
 // Roulette Wheel - Preprocess1
 void SteadyStateGA::Selection2(Solution& p, int& index) {
-    double point = static_cast< double >(std::rand()) * sumOfFitnesses / RAND_MAX;
+    double point = static_cast< double >(std::rand()) * sumOfAdjustedFitnesses / RAND_MAX;
     std::vector< double >::iterator it = std::lower_bound(cumulativeFitnesses.begin(), cumulativeFitnesses.end(), point);
     if (it != cumulativeFitnesses.end()) {
         index = std::distance(cumulativeFitnesses.begin(), it);
@@ -1304,10 +1304,10 @@ void SteadyStateGA::InitRecords() {
 }
 
 void SteadyStateGA::UpdateAdditoryFitnesses(int index, const Solution& s) {
-    sumOfFitnesses -= adjustedFitnesses[index];
+    sumOfAdjustedFitnesses -= adjustedFitnesses[index];
     double offset = maxFitness + (maxFitness - record.Fitness) / (ROULETTE_SELECTION_PRESSURE_K - 1);
     double adjustedFitness = offset - s.Fitness;
-    sumOfFitnesses += adjustedFitness;
+    sumOfAdjustedFitnesses += adjustedFitness;
     adjustedFitnesses[index] = adjustedFitness;
     if (index == 0) {
         cumulativeFitnesses[0] = adjustedFitnesses[0];
