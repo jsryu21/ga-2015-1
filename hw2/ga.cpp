@@ -1380,8 +1380,10 @@ void SteadyStateGA::NeedPerturbation5(bool& need, const Solution& offspr) {
 void SteadyStateGA::Perturbation0() {
     for (int i = 0; i < PSIZE; ++i) {
         if (population[i].Fitness > averageFitness) {
-            CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
-            UpdateStatistics(i, population[i]);
+			Solution randomSolution(solutionLen);
+			CALL_MEMBER_FN(*this, GenerateRandomSolution)(randomSolution);
+			UpdateStatistics(i, randomSolution);
+			population[i] = randomSolution;
         }
     }
 }
@@ -1389,8 +1391,10 @@ void SteadyStateGA::Perturbation0() {
 void SteadyStateGA::Perturbation1() {
     for (int i = 0; i < PSIZE; ++i) {
         if (population[i].Fitness > record.Fitness) {
-            CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
-            UpdateStatistics(i, population[i]);
+			Solution randomSolution(solutionLen);
+			CALL_MEMBER_FN(*this, GenerateRandomSolution)(randomSolution);
+			UpdateStatistics(i, randomSolution);
+			population[i] = randomSolution;
         }
     }
 }
@@ -1399,8 +1403,10 @@ void SteadyStateGA::Perturbation2() {
     double standard = (averageFitness + record.Fitness) / 2;
     for (int i = 0; i < PSIZE; ++i) {
         if (population[i].Fitness > standard) {
-            CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
-            UpdateStatistics(i, population[i]);
+			Solution randomSolution(solutionLen);
+			CALL_MEMBER_FN(*this, GenerateRandomSolution)(randomSolution);
+			UpdateStatistics(i, randomSolution);
+			population[i] = randomSolution;
         }
     }
 }
@@ -1409,8 +1415,10 @@ void SteadyStateGA::Perturbation3() {
     double standard = (averageFitness + maxFitness) / 2;
     for (int i = 0; i < PSIZE; ++i) {
         if (population[i].Fitness > standard) {
-            CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
-            UpdateStatistics(i, population[i]);
+			Solution randomSolution(solutionLen);
+			CALL_MEMBER_FN(*this, GenerateRandomSolution)(randomSolution);
+			UpdateStatistics(i, randomSolution);
+			population[i] = randomSolution;
         }
     }
 }
@@ -1428,6 +1436,7 @@ void SteadyStateGA::GA() {
         if (std::time(0) - begin > timeLimit - 1) {
             return; // end condition
         }
+		std::cout << record.Fitness << "," << averageFitness << "," << maxFitness << std::endl;
         Solution p1(solutionLen);
         Solution p2(solutionLen);
         Solution c(solutionLen);
