@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\ga.cpp">
+    <ClCompile Include="..\..\..\hw2\ga.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\test_case.cpp">
+    <ClCompile Include="..\..\..\hw2\test_case.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\test_case.h">
+    <ClInclude Include="..\..\..\hw2\test_case.h">
       <Filter>소스 파일</Filter>
     </ClInclude>
   </ItemGroup>

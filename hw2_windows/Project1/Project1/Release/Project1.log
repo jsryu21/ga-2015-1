@@ -1,18 +1,18 @@
-﻿빌드 시작: 2015-05-10 오후 5:55:52
+﻿빌드 시작: 2015-05-10 오후 8:37:54
      1>2 노드의 "C:\Users\bacchus01\Desktop\ga-2015-1\hw2_windows\Project1\Project1\Project1.vcxproj" 프로젝트(Build 대상)입니다.
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\ga.cpp ..\test_case.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\..\hw2\ga.cpp ..\..\..\hw2\test_case.cpp
          ga.cpp
-     1>..\ga.cpp(21): warning C4244: '초기화 중' : 'const double'에서 'const int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-     1>..\ga.cpp(930): warning C4244: '초기화 중' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-     1>..\ga.cpp(931): warning C4244: '+=' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-     1>..\ga.cpp(932): warning C4244: '-=' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-     1>..\ga.cpp(933): warning C4244: '-=' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-     1>..\ga.cpp(1073): warning C4244: '초기화 중' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-     1>..\ga.cpp(1074): warning C4244: '+=' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-     1>..\ga.cpp(1075): warning C4244: '-=' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-     1>..\ga.cpp(1076): warning C4244: '-=' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-     1>..\ga.cpp(1352): warning C4244: '인수' : 'time_t'에서 'unsigned int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+     1>..\..\..\hw2\ga.cpp(21): warning C4244: '초기화 중' : 'const double'에서 'const int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+     1>..\..\..\hw2\ga.cpp(1036): warning C4244: '초기화 중' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+     1>..\..\..\hw2\ga.cpp(1037): warning C4244: '+=' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+     1>..\..\..\hw2\ga.cpp(1038): warning C4244: '-=' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+     1>..\..\..\hw2\ga.cpp(1039): warning C4244: '-=' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+     1>..\..\..\hw2\ga.cpp(1179): warning C4244: '초기화 중' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+     1>..\..\..\hw2\ga.cpp(1180): warning C4244: '+=' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+     1>..\..\..\hw2\ga.cpp(1181): warning C4244: '-=' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+     1>..\..\..\hw2\ga.cpp(1182): warning C4244: '-=' : 'const double'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+     1>..\..\..\hw2\ga.cpp(1520): warning C4244: '인수' : 'time_t'에서 'unsigned int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
          test_case.cpp
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\bacchus01\Desktop\ga-2015-1\hw2_windows\Project1\Release\Project1.exe" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\bacchus01\Desktop\ga-2015-1\hw2_windows\Project1\Release\Project1.pdb" /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\bacchus01\Desktop\ga-2015-1\hw2_windows\Project1\Release\Project1.lib" /MACHINE:X86 /SAFESEH Release\ga.obj
@@ -24,4 +24,4 @@
 
 빌드했습니다.
 
-경과 시간: 00:00:01.51
+경과 시간: 00:00:01.08
