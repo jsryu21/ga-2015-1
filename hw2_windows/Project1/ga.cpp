@@ -38,12 +38,7 @@ Solution::Solution(int len) : Chromosome(std::vector< int >(len)),
 }
 
 std::ostream& operator<<(std::ostream& os, const Solution& solution) {
-    int len = solution.Chromosome.size() - 1;
-    for (int i = 0; i < len; ++i) {
-        os << (solution.Chromosome[i] + 1) << " ";
-    }
-    os << (solution.Chromosome[len] + 1);
-    os << " : " << solution.Fitness;
+    os << solution.Fitness;
     return os;
 }
 
