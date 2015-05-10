@@ -1,4 +1,4 @@
-﻿빌드 시작: 2015-05-10 오후 2:39:43
+﻿빌드 시작: 2015-05-10 오후 5:55:52
      1>2 노드의 "C:\Users\bacchus01\Desktop\ga-2015-1\hw2_windows\Project1\Project1\Project1.vcxproj" 프로젝트(Build 대상)입니다.
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\ga.cpp ..\test_case.cpp
@@ -24,4 +24,4 @@
 
 빌드했습니다.
 
-경과 시간: 00:00:01.49
+경과 시간: 00:00:01.51
