@@ -1,0 +1,1 @@
+Project1.exe 5 11 11 8 10 4 2 < cycle.in.600 >> hb_out_600_%1.txt
