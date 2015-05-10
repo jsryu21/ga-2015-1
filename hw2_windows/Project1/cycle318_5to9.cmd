@@ -1,3 +1,3 @@
 FOR /L %%i IN (5, 1, 9) DO (
-	start cycle318_%%i.cmd
+	start cycle318_i.cmd %%i
 )
