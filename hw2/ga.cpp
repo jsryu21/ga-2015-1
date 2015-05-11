@@ -1432,11 +1432,14 @@ void SteadyStateGA::GA() {
     if (Preprocess) {
         CALL_MEMBER_FN(*this, Preprocess)();
     }
+	int i = 0;
     while (true) {
         if (std::time(0) - begin > timeLimit - 1) {
             return; // end condition
         }
-		std::cout << record.Fitness << "," << averageFitness << "," << maxFitness << std::endl;
+		if (++i % 200 == 0) {
+			std::cout << record.Fitness << "," << averageFitness << "," << maxFitness << std::endl;
+		}		
         Solution p1(solutionLen);
         Solution p2(solutionLen);
         Solution c(solutionLen);
