@@ -582,6 +582,25 @@ int calcOnline(int c1, int c2)
     return i;
 }
 
+void ReadFromExternal(int solutionLen, const double* x, const double* y) {
+    gNumCity = solutionLen;
+    double (*ComputeDist)(int c1, int c2);
+    gNodeCoords = new POINT[solutionLen];
+    ComputeDist = GetEuc2DDist;
+    for (int i = 0; i < solutionLen; ++i) {
+        gNodeCoords[i].pt[0] = x[i];
+        gNodeCoords[i].pt[1] = y[i];
+    }
+    gDistMat = new double[(solutionLen * (solutionLen - 1)) / 2];
+    for (int r = 0; r < solutionLen - 1; ++r) {
+        for (int c = r + 1; c < solutionLen; ++c) {
+            gDistMat[c * (c - 1) / 2 + r] = ComputeDist(r, c);
+        }
+    }
+    gType = TYPE_STSP;
+    ConstructNN(20);
+}
+
 /***************************************************************/
 /********************** remap implementation *******************/
 /* map is remapped city -> org city. */
@@ -603,9 +622,9 @@ void RemapCities(int* map)
     {
         for( j=i+1; j<gNumCity; j++)
         {
-            c1 = min(rmap[i], rmap[j]);
-            c2 = max(rmap[i], rmap[j]);
-            mi = min(i, j); mx = max(i, j);
+            c1 = MIN(rmap[i], rmap[j]);
+            c2 = MAX(rmap[i], rmap[j]);
+            mi = MIN(i, j); mx = MAX(i, j);
 
             gDistMat[c2*(c2-1)/2 + c1] = temp[j*(j-1)/2 + i];
         }

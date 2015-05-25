@@ -41,7 +41,7 @@
 /// 도시 c1, c2사이의 거리를 반환한다.
 #define dist(c1, c2)        gDistMat[(c1)*gNumCity + (c2)]
 #elif   (DISTANCE_CALC_METHOD==1)
-#define dist(c1, c2)		gDistMat[max(c1,c2)*(max(c1,c2)-1)/2 + min(c1,c2)]
+#define dist(c1, c2)		gDistMat[MAX(c1,c2)*(MAX(c1,c2)-1)/2 + MIN(c1,c2)]
 #elif   (DISTANCE_CALC_METHOD==2)
 #define dist(c1, c2)        calcOnline(c1, c2)
 #endif
@@ -136,5 +136,6 @@ void CopyGraphName(char* dest);
 // 도시 i와 j의 사이의 거리를 반환한다. dist매크로를 사용할 것. 
 int calcOnline(int i, int j);
 
+void ReadFromExternal(int solutionLen, const double* x, const double* y);
 //@}  End of DOC++ block
 #endif /* end of file */

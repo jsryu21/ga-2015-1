@@ -31,9 +31,9 @@ typedef int BOOL;
 #define cint(x)             ((int)(ceil(x)))
 
 /// x와 y중에서 작은 값
-#define min(x, y)           ((x)<(y)?(x):(y))
+#define MIN(x, y)           ((x)<(y)?(x):(y))
 /// x와 y중에서 큰 값
-#define max(x, y)           ((x)<(y)?(y):(x))
+#define MAX(x, y)           ((x)<(y)?(y):(x))
 
 /// 정수쌍을 나타내는 범용 구조체
 struct IntPair { int i1; int i2; };
