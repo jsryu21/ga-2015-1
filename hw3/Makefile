@@ -25,7 +25,7 @@ LKMatrix.o: LKMatrix.h LKMatrix.cpp
 	g++ -O3 -c LKMatrix.cpp
 
 run: ga
-	./ga < cycle.in.200 > cycle.out
+	./ga < cycle.in > cycle.out
 
 clean:
 	rm -f ga

@@ -41,15 +41,11 @@ Solution::Solution(int len) : Chromosome(std::vector< int >(len)),
 }
 
 std::ostream& operator<<(std::ostream& os, const Solution& solution) {
-    /*
-       int len = solution.Chromosome.size() - 1;
-       for (int i = 0; i < len; ++i) {
-       os << (solution.Chromosome[i] + 1) << " ";
-       }
-       os << (solution.Chromosome[len] + 1);
-       os << " " << solution.Fitness;
-       */
-    os << solution.Fitness;
+    int len = solution.Chromosome.size() - 1;
+    for (int i = 0; i < len; ++i) {
+        os << (solution.Chromosome[i] + 1) << " ";
+    }
+    os << (solution.Chromosome[len] + 1);
     return os;
 }
 
@@ -150,6 +146,8 @@ class SteadyStateGA {
         void GA();
         void TwoPoint();
         void MultiStartTwoPoint();
+        void LK_1();
+        void MultiStartLK();
         void Answer();
         void PrintAllSolutions();
     private:
@@ -168,6 +166,7 @@ class SteadyStateGA {
         void UpdateStatistics(int index, const Solution& s);
         void UpdateAdditoryFitnesses(int index, const Solution& s);
         void UpdateRecords(int index, const Solution& s);
+        void PrintStatistics();
 
         std::time_t begin;
         int solutionLen;
@@ -192,6 +191,7 @@ class SteadyStateGA {
         CLK* lk;
         LKMatrix* mat;
         std::vector< int > ids;
+        int generation;
 };
 
 SteadyStateGA::SteadyStateGA(const std::time_t& begin_
@@ -234,7 +234,8 @@ SteadyStateGA::SteadyStateGA(const std::time_t& begin_
     Replacement(Replacement_),
     NeedPerturbation(NeedPerturbation_),
     Perturbation(Perturbation_),
-    ids(solutionLen)
+    ids(solutionLen),
+    generation(0)
 {
     for (int i = 0; i < solutionLen; ++i) {
         randomSolution.Chromosome[i] = i;
@@ -1465,6 +1466,7 @@ void SteadyStateGA::Perturbation3() {
 void SteadyStateGA::GA() {
     for (int i = 0; i < PSIZE; ++i) {
         CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
+        //CALL_MEMBER_FN(*this, LocalOpt)(population[i], population[i]);
     }
     InitRecords();
     if (Preprocess) {
@@ -1491,6 +1493,12 @@ void SteadyStateGA::GA() {
         if (need) {
             CALL_MEMBER_FN(*this, Perturbation)();
         }
+        /*
+           generation++;
+           if (generation % 200 == 0) {
+           PrintStatistics();
+           }
+           */
     }
 }
 
@@ -1525,6 +1533,38 @@ void SteadyStateGA::MultiStartTwoPoint() {
         std::cout << j << "/" << cnt << "	" << minFitness << std::endl;
     }
     std::cout << minFitness << std::endl;
+}
+
+void SteadyStateGA::LK_1() {
+    // asume PSIZE is 100
+    for (int i = 0; i < PSIZE; ++i) {
+        CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
+    }
+    for (int i = 0; i < PSIZE; ++i) {
+        LK(population[i], population[i]);
+    }
+    for (int i = 0; i < PSIZE; ++i) {
+        std::cout << population[i].Fitness << std::endl;
+    }
+}
+
+void SteadyStateGA::MultiStartLK() {
+    int cnt = 15000 / PSIZE;
+    for (int j = 0; j < cnt; ++j) {
+        double minFitness = std::numeric_limits< double >::max();
+        for (int i = 0; i < PSIZE; ++i) {
+            CALL_MEMBER_FN(*this, GenerateRandomSolution)(population[i]);
+        }
+        for (int i = 0; i < PSIZE; ++i) {
+            LK(population[i], population[i]);
+        }
+        for (int i = 0; i < PSIZE; ++i) {
+            if (minFitness > population[i].Fitness) {
+                minFitness = population[i].Fitness;
+            }
+        }
+        std::cout << j << "/" << cnt << "	" << minFitness << std::endl;
+    }
 }
 
 // print the best solution found to stdout
@@ -1593,6 +1633,10 @@ void SteadyStateGA::UpdateRecords(int index, const Solution& s) {
     averageFitness = totalFitness / PSIZE;
 }
 
+void SteadyStateGA::PrintStatistics() {
+    std::cout << record.Fitness << " " << averageFitness << " " << maxFitness << std::endl;
+}
+
 int main(int argc, char* argv[]) {
     std::time_t begin = std::time(0);
     // http://en.cppreference.com/w/cpp/numeric/random/rand
@@ -1605,7 +1649,7 @@ int main(int argc, char* argv[]) {
     SteadyStateGA::SelectionFn Selection = &SteadyStateGA::Selection4;
     SteadyStateGA::CrossoverFn Crossover = &SteadyStateGA::Crossover2;
     SteadyStateGA::MutationFn Mutation = &SteadyStateGA::Mutation6;
-    SteadyStateGA::LocalOptFn LocalOpt = &SteadyStateGA::LKH;
+    SteadyStateGA::LocalOptFn LocalOpt = &SteadyStateGA::LK;
     SteadyStateGA::ReplacementFn Replacement = &SteadyStateGA::Replacement2;
     SteadyStateGA::NeedPerturbationFn NeedPerturbation = &SteadyStateGA::NeedPerturbation4;
     SteadyStateGA::PerturbationFn Perturbation = &SteadyStateGA::Perturbation2;
@@ -1833,5 +1877,7 @@ int main(int argc, char* argv[]) {
     ga.GA();
     ga.Answer();
     //ga.PrintAllSolutions();
+    //ga.LK_1();
+    //ga.MultiStartLK();
     return 0;
 }

@@ -29,7 +29,7 @@ void TestCase::Init() {
     std::cin >> TimeLimit;
 }
 
-void TestCase::PrintTestCase() {
+void TestCase::PrintTestCase() const {
     std::cout << "Num locations : " << NumLocations << std::endl;
     std::cout << "Locations : " << std::endl;
     for (int i = 0; i < NumLocations; ++i) {
