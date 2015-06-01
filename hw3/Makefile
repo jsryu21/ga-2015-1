@@ -1,7 +1,7 @@
 all: ga
 
-ga: ga.o test_case.o lk.o edgetour.o tsplib_io.o cpputil.o
-	g++ -O3 -o ga ga.o test_case.o lk.o edgetour.o tsplib_io.o cpputil.o
+ga: ga.o test_case.o lk.o edgetour.o tsplib_io.o cpputil.o LKMatrix.o
+	g++ -O3 -o ga ga.o test_case.o lk.o edgetour.o tsplib_io.o cpputil.o LKMatrix.o
 
 ga.o: ga.cpp
 	g++ -O3 -c ga.cpp
@@ -20,6 +20,9 @@ tsplib_io.o: tsplib_io.h tsplib_io.cc
 
 cpputil.o: cpputil.h cpputil.cc
 	g++ -O3 -c cpputil.cc
+
+LKMatrix.o: LKMatrix.h LKMatrix.cpp
+	g++ -O3 -c LKMatrix.cpp
 
 run: ga
 	./ga < cycle.in.200 > cycle.out

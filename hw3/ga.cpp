@@ -10,6 +10,7 @@
 #include "test_case.h"
 #include "lk.h"
 #include "tsplib_io.h"
+#include "LKMatrix.h"
 
 // https://isocpp.org/wiki/faq/pointers-to-members
 #define CALL_MEMBER_FN(object,ptrToMember)  ((object).*(ptrToMember))
@@ -40,12 +41,15 @@ Solution::Solution(int len) : Chromosome(std::vector< int >(len)),
 }
 
 std::ostream& operator<<(std::ostream& os, const Solution& solution) {
-    int len = solution.Chromosome.size() - 1;
-    for (int i = 0; i < len; ++i) {
-        os << (solution.Chromosome[i] + 1) << " ";
-    }
-    os << (solution.Chromosome[len] + 1);
-    os << " " << solution.Fitness;
+    /*
+       int len = solution.Chromosome.size() - 1;
+       for (int i = 0; i < len; ++i) {
+       os << (solution.Chromosome[i] + 1) << " ";
+       }
+       os << (solution.Chromosome[len] + 1);
+       os << " " << solution.Fitness;
+       */
+    os << solution.Fitness;
     return os;
 }
 
@@ -121,6 +125,7 @@ class SteadyStateGA {
         void LocalOpt7(Solution& offspring, Solution& optOffSpring);
         void LocalOpt8(Solution& offspring, Solution& optOffSpring);
         void LK(Solution& offspring, Solution& optOffSpring);
+        void LKH(Solution& offspring, Solution& optOffSpring);
         void Replacement0(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement1(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
         void Replacement2(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffspr, int p1Index, int p2Index);
@@ -185,6 +190,8 @@ class SteadyStateGA {
         std::vector< int > corrGene;
         std::vector< std::vector< int > > cityNeighbors;
         CLK* lk;
+        LKMatrix* mat;
+        std::vector< int > ids;
 };
 
 SteadyStateGA::SteadyStateGA(const std::time_t& begin_
@@ -226,13 +233,16 @@ SteadyStateGA::SteadyStateGA(const std::time_t& begin_
     LocalOpt(LocalOpt_),
     Replacement(Replacement_),
     NeedPerturbation(NeedPerturbation_),
-    Perturbation(Perturbation_)
+    Perturbation(Perturbation_),
+    ids(solutionLen)
 {
     for (int i = 0; i < solutionLen; ++i) {
         randomSolution.Chromosome[i] = i;
+        ids[i] = i;
     }
     ReadFromExternal(solutionLen, &testCase.x[0], &testCase.y[0]);
     lk = new CLK(gNumCity, gNumNN);
+    mat = new LKMatrix(solutionDist);
 }
 
 // calculate the fitness of s and store it into s->f
@@ -1246,6 +1256,18 @@ void SteadyStateGA::LK(Solution& offspring, Solution& optOffSpring) {
     std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
 }
 
+void SteadyStateGA::LKH(Solution& offspring, Solution& optOffSpring) {
+    std::vector< int > tour(solutionLen);
+    for (int i = 0; i < solutionLen - 1; ++i) {
+        tour[offspring.Chromosome[i]] = offspring.Chromosome[i + 1];
+    }
+    tour[offspring.Chromosome[solutionLen - 1]] = offspring.Chromosome[0];
+    mat->OptimizeTour(tour, offspring.Chromosome);
+    Normalize(offspring);
+    CALL_MEMBER_FN(*this, Evaluate)(offspring);
+    std::copy(offspring.Chromosome.begin(), offspring.Chromosome.end(), optOffSpring.Chromosome.begin());
+}
+
 // replace one solution from the population with the new offspring
 // currently any random solution can be replaced
 void SteadyStateGA::Replacement0(const Solution& p1, const Solution& p2, const Solution& offspr, const Solution& optOffSpring, int p1Index, int p2Index) {
@@ -1583,7 +1605,7 @@ int main(int argc, char* argv[]) {
     SteadyStateGA::SelectionFn Selection = &SteadyStateGA::Selection4;
     SteadyStateGA::CrossoverFn Crossover = &SteadyStateGA::Crossover2;
     SteadyStateGA::MutationFn Mutation = &SteadyStateGA::Mutation6;
-    SteadyStateGA::LocalOptFn LocalOpt = &SteadyStateGA::LK;
+    SteadyStateGA::LocalOptFn LocalOpt = &SteadyStateGA::LKH;
     SteadyStateGA::ReplacementFn Replacement = &SteadyStateGA::Replacement2;
     SteadyStateGA::NeedPerturbationFn NeedPerturbation = &SteadyStateGA::NeedPerturbation4;
     SteadyStateGA::PerturbationFn Perturbation = &SteadyStateGA::Perturbation2;
@@ -1718,6 +1740,9 @@ int main(int argc, char* argv[]) {
                 break;
             case 9:
                 LocalOpt = &SteadyStateGA::LK;
+                break;
+            case 10:
+                LocalOpt = &SteadyStateGA::LKH;
                 break;
         }
         switch (atoi(argv[5])) {

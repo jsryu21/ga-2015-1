@@ -6,7 +6,7 @@ class TestCase {
      *****************************************************************/
     public:
         TestCase();
-        void PrintTestCase();
+        void PrintTestCase() const;
         // The number of locations
         int NumLocations;
         // Dist[i][j] := the Distance between (x[i], y[i]) and (x[j], y[j])
